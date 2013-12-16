@@ -1,0 +1,36 @@
+<body>
+    Load Impact Java SDK Documentation.
+    
+    <h2>Sample Usage</h2>
+     <pre>
+      import com.loadimpact.ApiTokenClient;
+      import com.loadimpact.resource.LoadZone;
+      import com.loadimpact.resource.TestConfiguration;
+      import com.loadimpact.resource.test_result.StandardMetricResult;
+
+      public class RunTestAndStreamResultsExample {
+          public static void main(String[] args) {
+              ApiTokenClient client = new ApiTokenClient("YOUR_API_TOKEN_GOES_HERE");
+              final int testConfigId = 1;
+              TestConfiguration config = client.getTestConfiguration(testConfigId);
+              final int testId = client.startTest(testConfigId);
+              Test test = client.getTest(testId);
+
+              int offset = 0;
+              while (test.status.isInProgress()) {
+                  List<StandardMetricResult> results = client.getStandardMetricResults(
+                      test.id, StandardMetricResult.Metrics.REQUESTS_PER_SECOND, LoadZone.AMAZON_US_PALOALTO,
+                      ApiTokenClient.OffsetRange.mk(offset, offset + 100));
+
+                  for (StandardMetricResult result : results) {
+                      System.out.println(result);
+                  }
+
+                  if (results.size()) {
+                      offset = Math.max(offset, results.get(results.size() - 1).offset);
+                  }
+              }
+          }
+      }
+  </pre>
+</body>

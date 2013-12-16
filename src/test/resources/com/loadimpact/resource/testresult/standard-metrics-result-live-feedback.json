@@ -1,0 +1,16 @@
+{
+    "timestamp":1382353101198947,
+    "offset":15,
+
+    "city": "Ashburn",
+    "country_code2": "US",
+    "load_zone_id": 11,
+    
+    "lat": 39.04,
+    "lng": -77.48,
+    
+    
+    "type": "wait_for_loadgen",
+    "percent": 80.5,
+    "msg": "Waiting for load generators..."
+}

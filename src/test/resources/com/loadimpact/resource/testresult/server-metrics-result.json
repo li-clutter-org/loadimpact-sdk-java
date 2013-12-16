@@ -1,0 +1,15 @@
+{
+    "timestamp":1383585564541137,
+    "offset":0,
+    "name":"stockholm2",
+    
+    "count":4,
+    "avg":0.05,
+    "min":0,
+    "max":0.2,
+
+    "median":0,
+    "stddev":0.1,
+    "unit":"%",
+    "label":"CPU"
+}
