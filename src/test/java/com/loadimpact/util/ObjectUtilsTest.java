@@ -1,5 +1,6 @@
 package com.loadimpact.util;
 
+import com.loadimpact.resource.LoadZone;
 import com.loadimpact.resource.configuration.LoadClip;
 import com.loadimpact.resource.configuration.LoadTrack;
 import org.junit.Test;
@@ -24,7 +25,7 @@ public class ObjectUtilsTest {
         clips.add( new LoadClip(25, 111));
         clips.add( new LoadClip(25, 222));
         clips.add( new LoadClip(50, 333));
-        LoadTrack track = new LoadTrack("foobar", clips);
+        LoadTrack track = new LoadTrack(LoadZone.AMAZON_US_ASHBURN, clips);
 
         LoadTrack copy = (LoadTrack) ObjectUtils.copy(track);
         assertThat(copy, notNullValue());

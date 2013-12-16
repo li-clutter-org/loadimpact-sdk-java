@@ -101,7 +101,7 @@ public class CreateTestConfigExample {
         config.url = "http://example.com/";
         config.userType = UserType.SBU;
         config.loadSchedule.add(new LoadScheduleStep(durationSecs, users));
-        config.tracks.add(new LoadTrack(LoadZone.AMAZON_US_ASHBURN.uid).clip(100, userScenarioId));
+        config.tracks.add(new LoadTrack(LoadZone.AMAZON_US_ASHBURN).clip(100, userScenarioId));
 
         config = client.createTestConfiguration(config);
     }

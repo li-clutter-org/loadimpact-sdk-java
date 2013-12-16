@@ -1,5 +1,6 @@
 package com.loadimpact.resource.configuration;
 
+import com.loadimpact.resource.LoadZone;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import java.io.Serializable;
@@ -18,12 +19,12 @@ public class LoadTrack implements Serializable {
 
     public LoadTrack() { }
 
-    public LoadTrack(String zone) {
-        this.zone = zone;
+    public LoadTrack(LoadZone loadZone) {
+        this.zone = loadZone.uid;
     }
 
-    public LoadTrack(String zone, List<LoadClip> clips) {
-        this.zone = zone;
+    public LoadTrack(LoadZone loadZone, List<LoadClip> clips) {
+        this.zone = loadZone.uid;
         this.clips = clips;
     }
 

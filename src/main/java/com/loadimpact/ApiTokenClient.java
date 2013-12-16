@@ -148,7 +148,6 @@ public class ApiTokenClient {
      */
     private WebTarget configure(String token, boolean debug, Logger log, int maxLog) {
         Client client = ClientBuilder.newBuilder()
-                                     .register(JsonProcessingFeature.class)
                                      .register(MultiPartFeature.class)
                                      .build();
         client.register(new HttpBasicAuthFilter(token, ""));
