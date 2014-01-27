@@ -17,7 +17,7 @@ Compile and build the JAR file
 
     mvn package
 
-The JAR can the be found in `target/`
+The JAR can then be found in `target/`
 
 Generate the documentation
 
@@ -27,7 +27,7 @@ The docs can then be found in `target/site/`
 
 ## Installation
 
-If the SDK is packaged as a ZIP, then unpack it and grab the JAR file. Add the jar file to the class-path.
+If the SDK is packaged as a zip-file, then unpack it and grab the JAR file. Add the jar file to the class-path.
 
 Check the exact artifact names and versions used in the generated dependency documentation. It's probably easiest to
 use Maven, Gradle or a similar tool to just add the dependency of this SDK and the tool will take care of
