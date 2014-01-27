@@ -27,20 +27,20 @@ public class DateUtilsTest {
 
     @Test
     public void testToIso8601() throws Exception {
-        GregorianCalendar date = new GregorianCalendar(TimeZone.getTimeZone("CET"));
-        date.set(2013, 9 - 1, 9, 2, 34, 51);
-        assertThat(DateUtils.toIso8601(date.getTime()), is("2013-09-09T02:34:51+02:00"));
+        GregorianCalendar date = new GregorianCalendar(2013, 9 - 1, 9, 2, 34, 51);
+        date.setTimeZone(TimeZone.getTimeZone("UTC"));
+        assertThat(DateUtils.toIso8601(date.getTime()), is("2013-09-09T02:34:51Z"));
     }
 
     @Test
     public void testToDateFromTimestamp() {
-        GregorianCalendar expected = new GregorianCalendar(TimeZone.getTimeZone("CET"));
-        expected.set(2013, 9 - 1, 10, 17, 38, 36);
+        GregorianCalendar expected = new GregorianCalendar(2013, 9 - 1, 10, 15, 38, 36);
+        expected.setTimeZone(TimeZone.getTimeZone("UTC"));
         assertThat(clearMilliSecs(DateUtils.toDateFromTimestamp(1378827516043595L)), is(clearMilliSecs(expected.getTime())));
     }
 
     private Date clearMilliSecs(Date date) {
-        GregorianCalendar c = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        GregorianCalendar c = new GregorianCalendar();
         c.setTime(date);
         c.clear(Calendar.MILLISECOND);
         return c.getTime();

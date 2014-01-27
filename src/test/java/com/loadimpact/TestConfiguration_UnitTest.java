@@ -1,5 +1,6 @@
 package com.loadimpact;
 
+import com.loadimpact.util.DateUtils;
 import com.loadimpact.resource.TestConfiguration;
 import com.loadimpact.resource.configuration.UserType;
 import org.junit.Before;
@@ -72,15 +73,15 @@ public class TestConfiguration_UnitTest {
 
     @Test
     public void testToJSON() throws Exception {
-        GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("CET"));
-        calendar.set(2013, 10 - 1, 30, 9, 30, 0);
+        GregorianCalendar calendar = new GregorianCalendar(2013, 10 - 1, 30, 9, 30, 0);
+        calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
         Date date = calendar.getTime();
 
         TestConfiguration tc = new TestConfiguration(0, "aaa", new URL("http://foo.com"), date, date, UserType.SBU, null, null);
         JsonObject jsonObject = tc.toJSON();
         assertThat(jsonObject, notNullValue());
         
-        assertThat(jsonObject.toString(), is("{\"name\":\"aaa\",\"url\":\"http://foo.com\",\"created\":\"2013-10-30T09:30:00+01:00\",\"updated\":\"2013-10-30T09:30:00+01:00\",\"config\":{\"user_type\":\"sbu\"}}"));
+        assertThat(jsonObject.toString(), is("{\"name\":\"aaa\",\"url\":\"http://foo.com\",\"created\":\"2013-10-30T09:30:00Z\",\"updated\":\"2013-10-30T09:30:00Z\",\"config\":{\"user_type\":\"sbu\"}}"));
     }
 
     @Test

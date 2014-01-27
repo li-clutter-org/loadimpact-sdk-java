@@ -25,6 +25,12 @@ Generate the documentation
 
 The docs can then be found in `target/site/`
 
+## Tests
+
+Run the test suite
+
+    mvn test -Duser.timezone=UTC -Dgpg.skip=true
+
 ## Installation
 
 If the SDK is packaged as a zip-file, then unpack it and grab the JAR file. Add the jar file to the class-path.
