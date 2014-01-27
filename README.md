@@ -29,7 +29,7 @@ The docs can then be found in `target/site/`
 
 Run the test suite
 
-    mvn test -Duser.timezone=UTC -Dgpg.skip=true
+    mvn test -Duser.timezone=UTC
 
 ## Installation
 
