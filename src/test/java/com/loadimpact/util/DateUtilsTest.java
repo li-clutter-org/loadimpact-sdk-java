@@ -27,9 +27,8 @@ public class DateUtilsTest {
 
     @Test
     public void testToIso8601() throws Exception {
-        GregorianCalendar date = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        GregorianCalendar date = new GregorianCalendar(TimeZone.getTimeZone("CET"));
         date.set(2013, 9 - 1, 9, 2, 34, 51);
-        date.setTimeZone(TimeZone.getTimeZone("CET"));
         assertThat(DateUtils.toIso8601(date.getTime()), is("2013-09-09T02:34:51+02:00"));
     }
 

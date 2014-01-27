@@ -72,11 +72,13 @@ public class TestConfiguration_UnitTest {
 
     @Test
     public void testToJSON() throws Exception {
-        Date date = new GregorianCalendar(2013, 10 - 1, 30, 9, 30, 0).getTime();
+        GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("CET"));
+        calendar.set(2013, 10 - 1, 30, 9, 30, 0);
+        Date date = calendar.getTime();
+
         TestConfiguration tc = new TestConfiguration(0, "aaa", new URL("http://foo.com"), date, date, UserType.SBU, null, null);
         JsonObject jsonObject = tc.toJSON();
         assertThat(jsonObject, notNullValue());
-//        System.out.println("jsonObject = " + jsonObject);
         
         assertThat(jsonObject.toString(), is("{\"name\":\"aaa\",\"url\":\"http://foo.com\",\"created\":\"2013-10-30T09:30:00+01:00\",\"updated\":\"2013-10-30T09:30:00+01:00\",\"config\":{\"user_type\":\"sbu\"}}"));
     }
@@ -85,7 +87,6 @@ public class TestConfiguration_UnitTest {
     public void testToJSON2() throws Exception {
         TestConfiguration tc = new TestConfiguration(json2);
         JsonObject jsonObject = tc.toJSON();
-//        System.out.println("jsonObject = " + jsonObject);
 
         assertThat(jsonObject.toString(), containsString("\"name\":\"Foobar\""));
         assertThat(jsonObject.toString(), containsString("\"loadzone\":\"amazon:us:ashburn\""));
