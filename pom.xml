@@ -4,7 +4,7 @@
 
     <groupId>com.loadimpact</groupId>
     <artifactId>Load-Impact-Java-SDK</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <packaging>jar</packaging>
 
     <name>Load Impact - Java SDK</name>
