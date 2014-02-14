@@ -1,0 +1,4 @@
+*.class
+
+# Output dirs #
+target/

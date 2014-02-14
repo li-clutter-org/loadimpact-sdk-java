@@ -1,0 +1,23 @@
+{
+    "config": {
+        "load_schedule": [
+            {
+                "duration": 10,
+                "users": 50
+            }
+        ],
+        "tracks": [
+            {
+                "clips": [
+                    {
+                        "percent": 100,
+                        "user_scenario_id": 79568
+                    }
+                ],
+                "loadzone": "amazon:us:ashburn"
+            }
+        ],
+        "user_type": "sbu"
+    },
+    "name": "Foobar"
+}

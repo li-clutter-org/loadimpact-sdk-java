@@ -1,0 +1,12 @@
+{
+    "timestamp":1383836512221819,
+    "offset":0,
+    "name":"DNS lookup time",
+    
+    "count":17,
+    "avg":0.0098,
+    "min":0.0098,
+    "max":0.0098,
+
+    "type":"number"
+}

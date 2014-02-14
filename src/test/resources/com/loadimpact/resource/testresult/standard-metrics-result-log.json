@@ -1,0 +1,10 @@
+{
+    "timestamp":1382353101198947,
+    "offset":19,
+
+    "load_zone_id": 12,
+    "user_scenario_id": 12345,
+    
+    "level": "info",
+    "message": "I'm a log message!"
+}

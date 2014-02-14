@@ -1,0 +1,11 @@
+{
+    "timestamp":1382353101198947,
+    "offset":5,
+
+    "avg": 1.6,
+    "count": 11,
+    
+    "content_type": "text/html",
+    "max": 2.5,
+    "min": 1.1
+}

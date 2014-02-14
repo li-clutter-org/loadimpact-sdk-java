@@ -1,0 +1,12 @@
+{
+    "timestamp":1382353104272303,
+    "offset":0,
+    "name":"Foobar",
+
+    "count":42,
+    "avg":5.45528,
+    "min":5.45528,
+    "max":5.45528,
+
+    "type":"seconds"
+}

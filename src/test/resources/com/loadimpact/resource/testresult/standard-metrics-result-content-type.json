@@ -1,0 +1,10 @@
+{
+    "timestamp":1382353101198947,
+    "offset":25,
+
+    "content_type": {
+        "text/html": 1,
+        "image/png": 5,
+        "application/json": 2
+    }
+}

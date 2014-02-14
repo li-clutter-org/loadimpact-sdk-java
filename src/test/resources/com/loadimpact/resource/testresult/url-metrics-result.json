@@ -1,0 +1,21 @@
+{
+    "timestamp":1382353101198947,
+    "offset":0,
+    "count":2,
+    "avg":520.1,
+    "min":351.17,
+    "max":689.02,
+    
+    "url":"http:\/\/www.ribomation.se\/",
+    "method":"GET",
+    "status_code":200,
+
+    "avg_cntlen":78591,
+    "comp_count":0,
+    "avg_comp_cntlen":0,
+    
+    "content_types":{
+        "text\/html":2, 
+        "image\/png":5
+    }
+}
