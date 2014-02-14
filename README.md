@@ -19,6 +19,12 @@ Compile and build the JAR file
 
 The JAR can then be found in `target/`
 
+Compile and build an all-dependencies-included JAR file
+
+    mvn assembly:assembly
+
+The JAR can then be found in `target/`
+
 Generate the documentation
 
     mvn site
