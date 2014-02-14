@@ -33,6 +33,7 @@ import com.loadimpact.util.ObjectUtils;
 import com.loadimpact.util.StringUtils;
 import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
 import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.jsonp.JsonProcessingFeature;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -165,6 +166,7 @@ public class ApiTokenClient {
     private WebTarget configure(String token, boolean debug, Logger log, int maxLog) {
         Client client = ClientBuilder.newBuilder()
                                      .register(MultiPartFeature.class)
+                                     .register(JsonProcessingFeature.class)
                                      .build();
         client.register(new HttpBasicAuthFilter(token, ""));
         if (debug) client.register(new LoggingFilter(log, maxLog));
@@ -479,7 +481,7 @@ public class ApiTokenClient {
      */
     public boolean isValidToken() {
         try {
-            Response response = wsBase.path(TEST_CONFIGS).request(MediaType.APPLICATION_JSON).get();
+            Response response = wsBase.path(TEST_CONFIGS).request(MediaType.APPLICATION_JSON_TYPE).get();
             return response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL;
         } catch (Exception e) {
             log.info("API token validation failed: " + e);

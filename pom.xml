@@ -135,6 +135,15 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptionRef>jar-with-dependencies</descriptionRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -163,7 +172,7 @@
                 <configuration>
                     <description>The SDK documentation.</description>
                     <overview>${basedir}/src/site/javadoc-overview.html</overview>
-                    <bottom><![CDATA[&copy; 2013, <a href="http://loadimpact.com/">Load Impact AB<a>]]>. All rights reserved.</bottom>
+                    <bottom><![CDATA[&copy; 2014, <a href="http://loadimpact.com/">Load Impact AB<a>]]>. All rights reserved.</bottom>
                     <show>public</show>
                     <nodeprecated>true</nodeprecated>
                     <stylesheet>java</stylesheet>
