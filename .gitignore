@@ -2,3 +2,7 @@
 
 # Output dirs #
 target/
+
+# Project stuff
+.idea/
+*.iml
