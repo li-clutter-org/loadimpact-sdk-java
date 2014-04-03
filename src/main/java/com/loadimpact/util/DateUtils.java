@@ -28,7 +28,7 @@ public class DateUtils {
      */
     public static String toIso8601(Date date) {
         if (date == null) return null;
-        return ISODateTimeFormat.dateTimeNoMillis()./*withZoneUTC().*/print(date.getTime());
+        return ISODateTimeFormat.dateTimeNoMillis().withZoneUTC().print(date.getTime());
     }
 
     /**
