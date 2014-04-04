@@ -66,7 +66,7 @@ public class StandardMetricResult extends Result {
             this.valueName = valueName;
             this.integral = integral;
             this.resultType = resultType;
-            this.id = PREFIX + name();
+            this.id = PREFIX + name().toLowerCase();
         }
 
 
