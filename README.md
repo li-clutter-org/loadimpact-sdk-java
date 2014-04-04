@@ -126,7 +126,6 @@ import com.loadimpact.resource.LoadZone;
 
 // Amazon load zones
 LoadZone.AMAZON_US_ASHBURN;
-LoadZone.AMAZON_US_ASHBURN;
 LoadZone.AMAZON_US_PALOALTO;
 LoadZone.AMAZON_IE_DUBLIN;
 LoadZone.AMAZON_SG_SINGAPORE;
