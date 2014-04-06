@@ -73,4 +73,12 @@ public class StringUtilsTest {
         String md5 = "7f03a04ddf64226fc04f601a51783ecf";
         assertThat(StringUtils.md5(plain), is(md5));
     }
+
+    @Test
+    public void testPercentageBar() {
+        assertThat(StringUtils.percentageBar(25.0), is("[##########..............................]  25%"));
+        assertThat(StringUtils.percentageBar(0)   , is("[........................................]   0%"));
+        assertThat(StringUtils.percentageBar(100) , is("[########################################] 100%"));
+    }
+    
 }
