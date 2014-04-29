@@ -72,6 +72,10 @@ public class StandardMetricResult extends Result {
 
         @Override
         public String toString() {
+            return name();
+        }
+        
+        public String toStringDebug() {
             return String.format("%s:%s:%s", name(), valueName != null ? valueName : "*", integral != null ? integral : "*");
         }
     }

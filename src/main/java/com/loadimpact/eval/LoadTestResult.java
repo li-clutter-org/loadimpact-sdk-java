@@ -8,7 +8,7 @@ import com.loadimpact.util.StringUtils;
  * @author jens
  */
 public enum LoadTestResult {
-    aborted, unstable, failed, error;
+    aborted, unstable, failed, error, success;
     
     private final String id;
     private final String displayName;
