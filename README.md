@@ -48,13 +48,13 @@ downloading and caching all dependent JAR files.
 The SDK is available through Maven Central, add the following to your dependencies
 
 ```xml
-    <dependencies>
-        <dependency>
-            <groupId>com.loadimpact</groupId>
-            <artifactId>Load-Impact-Java-SDK</artifactId>
-            <version>1.1.3</version>
-        </dependency>
-    </dependencies>
+<dependencies>
+    <dependency>
+        <groupId>com.loadimpact</groupId>
+        <artifactId>Load-Impact-Java-SDK</artifactId>
+        <version>1.1.3</version>
+    </dependency>
+</dependencies>
 ```
 
 ## Creating an API client
