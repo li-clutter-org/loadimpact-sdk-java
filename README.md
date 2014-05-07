@@ -45,6 +45,18 @@ Check the exact artifact names and versions used in the generated dependency doc
 use Maven, Gradle or a similar tool to just add the dependency of this SDK and the tool will take care of
 downloading and caching all dependent JAR files.
 
+The SDK is available through Maven Central, add the following to your dependencies
+
+```xml
+    <dependencies>
+        <dependency>
+            <groupId>com.loadimpact</groupId>
+            <artifactId>Load-Impact-Java-SDK</artifactId>
+            <version>1.1.3</version>
+        </dependency>
+    </dependencies>
+```
+
 ## Creating an API client
 
 To create an API client instance you need your API token. You can find it on
