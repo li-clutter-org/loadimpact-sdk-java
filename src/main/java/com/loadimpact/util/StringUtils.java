@@ -37,8 +37,10 @@ public class StringUtils {
      * @param prefix    substring to check for
      * @return true if prefix starts in target
      */
-    public static boolean startsWith(String target, String prefix) {
-        return target != null && prefix != null && target.length() > 0 && target.startsWith(prefix);
+    public static boolean startsWith(Object target, String prefix) {
+        if (target==null || prefix==null) return false;
+        String targetTxt = target.toString();
+        return targetTxt.length() > 0 && targetTxt.startsWith(prefix);
     }
 
     /**
@@ -83,5 +85,21 @@ public class StringUtils {
         } catch (NoSuchAlgorithmException ignore) { }
         return s;
     }
-    
+
+    /**
+     * Creates a percentage ASCII bar.
+     * @param percentage    value in [0, 100]
+     * @return "[###......] nn%"
+     */
+    public static String percentageBar(double percentage) {
+        final char  dot   = '.';
+        final char  mark  = '#';
+        final int   slots = 40;
+
+        StringBuilder bar = new StringBuilder(replicate(String.valueOf(dot), slots));
+        int numSlots = (int) (slots * percentage / 100.0);
+        for (int k = 0; k < numSlots; ++k) bar.setCharAt(k, mark);
+
+        return String.format("[%s] %3.0f%%", bar, percentage);
+    }
 }
