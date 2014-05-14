@@ -52,7 +52,7 @@ The SDK is available through Maven Central, add the following to your dependenci
     <dependency>
         <groupId>com.loadimpact</groupId>
         <artifactId>Load-Impact-Java-SDK</artifactId>
-        <version>1.1.3</version>
+        <version>1.2.0</version>
     </dependency>
 </dependencies>
 ```
