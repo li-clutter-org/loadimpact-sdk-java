@@ -9,7 +9,7 @@
 
     <groupId>com.loadimpact</groupId>
     <artifactId>Load-Impact-Java-SDK</artifactId>
-    <version>1.2</version>
+    <version>1.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Load Impact - Java SDK</name>
@@ -34,7 +34,7 @@
         <url>https://github.com/loadimpact/loadimpact-sdk-java</url>
         <connection>scm:git:git@github.com:loadimpact/loadimpact-sdk-java.git</connection>
         <developerConnection>scm:git:git@github.com:loadimpact/loadimpact-sdk-java.git</developerConnection>
-      <tag>Load-Impact-Java-SDK-1.2</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <properties>
