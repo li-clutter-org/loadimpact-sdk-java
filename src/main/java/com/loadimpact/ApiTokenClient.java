@@ -31,7 +31,7 @@ import com.loadimpact.resource.testresult.StandardMetricResult;
 import com.loadimpact.resource.testresult.UrlMetricResult;
 import com.loadimpact.util.ObjectUtils;
 import com.loadimpact.util.StringUtils;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jsonp.JsonProcessingFeature;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -52,6 +52,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.net.URL;
@@ -164,11 +165,15 @@ public class ApiTokenClient {
      * @return configured REST URL target
      */
     private WebTarget configure(String token, boolean debug, Logger log, int maxLog) {
+        HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.basic(token, "");
+        
         Client client = ClientBuilder.newBuilder()
                                      .register(MultiPartFeature.class)
                                      .register(JsonProcessingFeature.class)
+//                .register(authFeature)
                                      .build();
-        client.register(new HttpBasicAuthFilter(token, ""));
+//        client.register(new HttpBasicAuthFilter(token, ""));
+        client.register(authFeature);
         if (debug) client.register(new LoggingFilter(log, maxLog));
         return client.target(baseUri);
     }
@@ -431,7 +436,8 @@ public class ApiTokenClient {
             JsonType json = requestClosure.call(request);
             return (responseClosure != null) ? responseClosure.call(json) : null;
         } catch (WebApplicationException e) {
-            switch (e.getResponse().getStatus()) {
+            Response.StatusType status = e.getResponse().getStatusInfo();
+            switch (status.getStatusCode()) {
                 case 400:
                     throw new BadRequestException(operation,id,action,e);
                 case 401:
@@ -448,14 +454,28 @@ public class ApiTokenClient {
                     throw new RateLimitedException(operation,id,action);
                 case 429:
                     throw new ResponseParseException(operation,id,action,e);
-                case 500:
-                    throw new ServerException(e);
+                case 500: {
+                    String message = "";
+                    Response response = e.getResponse();
+                    String contentType = response.getHeaderString("Content-Type");
+                    if (contentType.equals("application/json")) {
+                        InputStream is = (InputStream) response.getEntity();
+                        JsonObject errJson = Json.createReader(is).readObject();
+                        message = errJson.getString("message");
+                    } else if (contentType.startsWith("text/html")) {
+                        InputStream is = (InputStream) response.getEntity();
+                        message = StringUtils.toString(is);
+                    }
+                    throw new ServerException(status.getReasonPhrase() + ": " + message);
+                }
                 default:
                     throw new ApiException(e);
             }
         } catch (ApiException e) {
+            e.printStackTrace();
             throw e;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new ApiException(e);
         }
     }
