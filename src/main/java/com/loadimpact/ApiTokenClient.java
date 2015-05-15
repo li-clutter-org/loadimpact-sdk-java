@@ -165,16 +165,14 @@ public class ApiTokenClient {
      * @return configured REST URL target
      */
     private WebTarget configure(String token, boolean debug, Logger log, int maxLog) {
-        HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.basic(token, "");
-        
         Client client = ClientBuilder.newBuilder()
                                      .register(MultiPartFeature.class)
                                      .register(JsonProcessingFeature.class)
-//                .register(authFeature)
                                      .build();
-//        client.register(new HttpBasicAuthFilter(token, ""));
-        client.register(authFeature);
+        
+        client.register(HttpAuthenticationFeature.basic(token, ""));
         if (debug) client.register(new LoggingFilter(log, maxLog));
+        
         return client.target(baseUri);
     }
 

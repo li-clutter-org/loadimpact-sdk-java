@@ -12,7 +12,7 @@ import static org.junit.Assert.assertThat;
  * @user jens
  * @date 2015-04-27
  */
-public class ApiTokenValidation  extends IntegrationTestSupport {
+public class ApiTokenValidation  extends AbstractIntegrationTestBase {
     @Test
     public void validKeyShouldPass() throws Exception {
         assertThat(client.isValidToken(), is(true));

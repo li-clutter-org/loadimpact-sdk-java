@@ -3,6 +3,8 @@ package com.loadimpact.resource;
 import com.loadimpact.util.StringUtils;
 
 import javax.json.JsonObject;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Enumeration of all known load zones.
@@ -38,13 +40,16 @@ public enum LoadZone {
     public final String    city;
     public final Countries country;
     public final Providers provider;
+    private static Map<String, LoadZone> zones;
+
 
     LoadZone(int id, Countries country, Providers provider) {
         this.id = id;
-        this.uid = String.format("%s:%s:%s", provider.name().toLowerCase(), country.name().toLowerCase(), this.name().toLowerCase());
         this.city = toCityName(name());
         this.country = country;
         this.provider = provider;
+        this.uid = String.format("%s:%s:%s", this.provider, this.country, this.city).toLowerCase();
+        add(this);
     }
 
     @Override
@@ -52,15 +57,21 @@ public enum LoadZone {
         return uid;
     }
 
-    public static LoadZone valueOf(JsonObject json) {
-        String jsonId = json.getString("id", null);
-        if (jsonId == null) return AGGREGATE_WORLD;
-
-        for (LoadZone z : values()) {
-            if (z.uid.equals(jsonId)) return z;
+    private static void add(LoadZone z) {
+        if (zones == null) {
+            zones = new HashMap<String, LoadZone>();
         }
+        zones.put(z.uid, z);
+    }
+    
+    public static LoadZone valueOf(JsonObject json) {
+        String zoneId = json.getString("id", null);
+        if (zoneId == null) return AGGREGATE_WORLD;
 
-        return AGGREGATE_WORLD;
+        zoneId = zoneId.replaceAll("\\s", "");
+        zoneId = zoneId.replaceAll("\u00e3", "a");
+        LoadZone zone = zones.get(zoneId);
+        return (zone != null) ? zone : AGGREGATE_WORLD;
     }
 
     public static LoadZone valueOf(int zoneId) {
@@ -71,15 +82,11 @@ public enum LoadZone {
     }
 
     private String toCityName(String s) {
-        s = StringUtils.toInitialCase(s);
-        int p = s.indexOf('_');
-        if (p < 0) return s;
+        String[] parts = s.split("_");
+        if (parts.length != 3) return s;
 
-        StringBuilder buf = new StringBuilder(s);
-        buf.setCharAt(p, ' ');
-        p++;
-        buf.setCharAt(p, Character.toUpperCase(buf.charAt(p)));
-        return buf.toString();
+        return StringUtils.toInitialCase(parts[2]);
     }
 
+    
 }
