@@ -5,6 +5,7 @@ import com.loadimpact.resource.configuration.LoadScheduleStep;
 import com.loadimpact.resource.configuration.LoadTrack;
 import com.loadimpact.resource.configuration.UserType;
 import com.loadimpact.util.DateUtils;
+import com.loadimpact.util.StringUtils;
 
 import javax.json.*;
 import java.io.Serializable;
@@ -28,9 +29,10 @@ public class TestConfiguration implements Serializable {
     public Date     updated;
     public UserType userType;
     public List<LoadScheduleStep> loadSchedule = new ArrayList<LoadScheduleStep>();
-    public List<LoadTrack>    tracks    = new ArrayList<LoadTrack>();
+    public List<LoadTrack>        tracks       = new ArrayList<LoadTrack>();
 
-    public TestConfiguration() { }
+    public TestConfiguration() {
+    }
 
     public TestConfiguration(int id, String name, URL url, Date created, Date updated, UserType userType, List<LoadScheduleStep> loadSchedule, List<LoadTrack> tracks) {
         this.id = id;
@@ -44,6 +46,8 @@ public class TestConfiguration implements Serializable {
     }
 
     public TestConfiguration(JsonObject json) {
+//        System.err.println("TestConfiguration: " + json);
+
         this.id = json.getInt("id", 0);
         this.name = json.getString("name", null);
         this.created = DateUtils.toDateFromIso8601(json.getString("created", null));
@@ -51,8 +55,10 @@ public class TestConfiguration implements Serializable {
 
         try {
             String u = json.getString("url", null);
-            this.url = u != null ? new URL(u) : null;
-        } catch (MalformedURLException e) { throw new RuntimeException(e); }
+            this.url = (!StringUtils.isBlank(u)) ? new URL(u) : null;
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
 
         JsonObject configJson = json.getJsonObject("config");
         if (configJson != null) {
@@ -79,15 +85,15 @@ public class TestConfiguration implements Serializable {
     }
 
     public JsonObject toJSON() {
-        JsonBuilderFactory f = Json.createBuilderFactory(null);
-        JsonObjectBuilder json = f.createObjectBuilder();
+        JsonBuilderFactory f    = Json.createBuilderFactory(null);
+        JsonObjectBuilder  json = f.createObjectBuilder();
         if (name != null) json.add("name", name);
         if (url != null) json.add("url", url.toString());
         if (created != null) json.add("created", DateUtils.toIso8601(created));
         if (updated != null) json.add("updated", DateUtils.toIso8601(updated));
 
         JsonObjectBuilder configJson = f.createObjectBuilder();
-        boolean hasConfig = false;
+        boolean           hasConfig  = false;
         if (userType != null) {
             hasConfig = true;
             configJson.add("user_type", userType.name().toLowerCase());
@@ -98,8 +104,8 @@ public class TestConfiguration implements Serializable {
             JsonArrayBuilder loadScheduleJson = f.createArrayBuilder();
             for (LoadScheduleStep s : loadSchedule) {
                 loadScheduleJson.add(f.createObjectBuilder()
-                                      .add("duration", s.duration)
-                                      .add("users", s.users)
+                                .add("duration", s.duration)
+                                .add("users", s.users)
                 );
             }
             configJson.add("load_schedule", loadScheduleJson);
@@ -115,8 +121,8 @@ public class TestConfiguration implements Serializable {
                     JsonArrayBuilder clipsJson = f.createArrayBuilder();
                     for (LoadClip c : t.clips) {
                         JsonObjectBuilder clipJson = f.createObjectBuilder()
-                                                      .add("percent", c.percent)
-                                                      .add("user_scenario_id", c.scenarioId);
+                                .add("percent", c.percent)
+                                .add("user_scenario_id", c.scenarioId);
                         clipsJson.add(clipJson);
                     }
                     trackJson.add("clips", clipsJson);
