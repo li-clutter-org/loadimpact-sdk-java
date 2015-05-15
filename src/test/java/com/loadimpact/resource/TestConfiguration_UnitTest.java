@@ -1,7 +1,5 @@
-package com.loadimpact;
+package com.loadimpact.resource;
 
-import com.loadimpact.util.DateUtils;
-import com.loadimpact.resource.TestConfiguration;
 import com.loadimpact.resource.configuration.UserType;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,8 +15,8 @@ import java.util.TimeZone;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertThat;
 
 /**
  * Unit test of {@link com.loadimpact.resource.TestConfiguration}.
@@ -30,8 +28,8 @@ public class TestConfiguration_UnitTest {
 
     @Before
     public void init() {
-        json = loadJSON("/test-configuration.json");
-        json2 = loadJSON("/test-configuration-partial.json");
+        json = loadJSON("test-configuration.json");
+        json2 = loadJSON("test-configuration-partial.json");
     }
 
     @Test
