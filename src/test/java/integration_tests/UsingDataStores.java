@@ -30,7 +30,7 @@ public class UsingDataStores extends AbstractIntegrationTestBase {
     }
 
     @Test 
-    @Ignore("Server-side hangs during upload")
+//    @Ignore("Server-side hangs during upload")
     public void create_get_delete_of_ds_should_pass() throws Exception {
         // Prepare
         String dsName = "integration_test_" + System.nanoTime();
@@ -43,17 +43,17 @@ public class UsingDataStores extends AbstractIntegrationTestBase {
         assertThat(ds.name, is(dsName));
 
         // Fetch and wait for it's ready
-        final int maxRetries = 30;
-        final int delay      = 10 * 1000;
+        final int maxRetries = 10;
+        final int delay      = 5 * 1000;
         final int dsId       = ds.id;
-        int       retry      = 0;
+        int       retry      = 1;
         do {
             ds = client.getDataStore(dsId);
             if (ds.status == DataStore.Status.READY) break;
 
-            System.out.println("*** Waiting for data-store '" + dsName + "' to become ready. ");
+            System.out.printf("*** Waiting for data-store '" + dsName + "' to become ready. # %d(%d)%n", retry, maxRetries);
             Thread.sleep(delay);
-        } while (++retry < maxRetries);
+        } while (++retry <= maxRetries);
         assertThat("Waiting for DS to be ready, but it's taken way too long time", ds.status, is(DataStore.Status.READY));
         assertThat(ds.rows, is(3));
 
