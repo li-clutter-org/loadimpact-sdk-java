@@ -25,12 +25,6 @@ import static org.junit.Assert.fail;
 public class UsingScenarios extends AbstractIntegrationTestBase {
     public static final String SCENARIO_RESOURCE = "scenario.txt";
 
-    @Before
-    public void debug() {
-        client.setDebug(false);
-    }
-
-
     @Test
     public void create_get_delete_of_scenario_should_pass() throws Exception {
         // Prepare

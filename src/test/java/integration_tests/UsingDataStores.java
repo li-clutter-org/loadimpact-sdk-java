@@ -24,11 +24,6 @@ import static org.junit.Assert.fail;
 public class UsingDataStores extends AbstractIntegrationTestBase {
     public static final String DATASTORE_RESOURCE = "datastore.csv";
 
-    @Before
-    public void debug() {
-        client.setDebug(true);
-    }
-
     @Test 
 //    @Ignore("Server-side hangs during upload")
     public void create_get_delete_of_ds_should_pass() throws Exception {
@@ -47,7 +42,7 @@ public class UsingDataStores extends AbstractIntegrationTestBase {
         final int delay      = 5 * 1000;
         final int dsId       = ds.id;
         int       retry      = 1;
-        do {
+        do { //TODO: use waitFor() instead 
             ds = client.getDataStore(dsId);
             if (ds.status == DataStore.Status.READY) break;
 

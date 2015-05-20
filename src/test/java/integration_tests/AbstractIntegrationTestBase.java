@@ -6,6 +6,10 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
+import static org.hamcrest.Matchers.lessThan;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
 import java.io.*;
 import java.util.Properties;
 
@@ -15,10 +19,11 @@ import java.util.Properties;
  * @author jens
  */
 public abstract class AbstractIntegrationTestBase {
-    public static final String DEFAULT_TOKEN_PATH = "../loadimpact-token.properties";
-    public static final String TOKEN_PROPERTY     = "loadimpact.token.file";
-    public static final String TOKEN_ENVIRONMENT  = "LOADIMPACT_TOKEN_FILE";
-    public static final String INFO_MESSAGE       = "how_to_run_integration_tests.txt";
+    public static final String DEFAULT_TOKEN_PATH      = "../loadimpact-token.properties";
+    public static final String TOKEN_PROPERTY          = "loadimpact.token.file";
+    public static final String TOKEN_ENVIRONMENT       = "LOADIMPACT_TOKEN_FILE";
+    public static final String INFO_MESSAGE            = "how_to_run_integration_tests.txt";
+    public static final int    ONE_SECOND_AS_MILLISECS = 1000;
 
     protected static String         apiToken;
     protected        ApiTokenClient client;
@@ -34,6 +39,7 @@ public abstract class AbstractIntegrationTestBase {
     public void createClient() {
         client = new ApiTokenClient(apiToken);
     }
+
 
     /**
      * Locates a token file and returns a Reader or null if not found.
@@ -117,6 +123,49 @@ public abstract class AbstractIntegrationTestBase {
         System.err.println("**********************************************************");
         System.err.println(StringUtils.toString(is));
         System.err.println("**********************************************************");
+    }
+
+
+    interface WaitForClosure {
+        boolean isDone();
+    }
+
+    protected void waitFor(String what, WaitForClosure expr) {
+        waitFor(60, 5, what, expr);
+    }
+
+    protected void waitFor(int maxWaitingTimeInSeconds, String what, WaitForClosure expr) {
+        waitFor(maxWaitingTimeInSeconds, 5, what, expr);
+    }
+
+    protected void waitFor(int maxWaitingTimeInSeconds, int sleepTimeInSeconds, String what, WaitForClosure expr) {
+        final long deadline = now() + maxWaitingTimeInSeconds * ONE_SECOND_AS_MILLISECS;
+
+        System.out.println("Waiting for " + what);
+        while (now() < deadline) {
+            boolean done = false;
+            try {
+                done = expr.isDone();
+            } catch (Exception e) {
+                fail(e.toString());
+            }
+            if (done) break;
+
+            System.out.print(".");
+            System.out.flush();
+            try {
+                Thread.sleep(sleepTimeInSeconds * ONE_SECOND_AS_MILLISECS);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+        System.out.println();
+
+        assertThat(now(), lessThan(deadline));
+    }
+
+    protected long now() {
+        return System.currentTimeMillis();
     }
 
 

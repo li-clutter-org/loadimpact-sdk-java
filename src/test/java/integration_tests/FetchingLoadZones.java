@@ -25,11 +25,6 @@ import static org.junit.Assert.assertThat;
  */
 public class FetchingLoadZones extends AbstractIntegrationTestBase {
 
-    @Before
-    public void debug() {
-        client.setDebug(false);
-    }
-
     @Test
     public void fetchSingleTestZoneShouldPass() throws Exception {
         checkSingleZone("amazon", "us", "ashburn");

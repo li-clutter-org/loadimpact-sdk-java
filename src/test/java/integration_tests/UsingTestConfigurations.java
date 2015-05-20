@@ -29,12 +29,6 @@ import static org.junit.Assert.fail;
  */
 public class UsingTestConfigurations extends AbstractIntegrationTestBase {
     
-    @Before
-    public void debug() {
-        client.setDebug(false);
-    }
-
-
     @Test
     public void create_configuration_should_pass() throws Exception {
         final String   configurationName = "integration_test_" + System.nanoTime();
