@@ -26,10 +26,23 @@ import static org.junit.Assert.assertThat;
 public class FetchingLoadZones extends AbstractIntegrationTestBase {
 
     @Test
+    public void fetchAllTestZonesShouldPass() throws Exception { 
+        List<LoadZone> zones = client.getLoadZone();
+        assertThat(zones, notNullValue());
+        assertThat(LoadZone.values().length - 1, lessThanOrEqualTo(zones.size()));
+
+        for (LoadZone z : LoadZone.values()) {
+            assertThat(zones, hasItem(z));
+        }
+    }
+
+    @Test
     public void fetchSingleTestZoneShouldPass() throws Exception {
         checkSingleZone("amazon", "us", "ashburn");
         checkSingleZone("amazon", "au", "sydney");
         checkSingleZone("rackspace", "uk", "london");
+        checkSingleZone("amazon", "us", "palo alto");
+        checkSingleZone("amazon", "br", "são paulo");
     }
 
     private void checkSingleZone(String provider, String country, String city) {
@@ -42,17 +55,6 @@ public class FetchingLoadZones extends AbstractIntegrationTestBase {
         assertThat(zone.provider.name().toLowerCase(), is(provider));
         assertThat(zone.country.name().toLowerCase(), is(country));
         assertThat(zone.city.toLowerCase(), is(city));
-    }
-
-    @Test
-    public void fetchAllTestZonesShouldPass() throws Exception {
-        List<LoadZone> zones = client.getLoadZone();
-        assertThat(zones, notNullValue());
-        assertThat(LoadZone.values().length - 1, lessThanOrEqualTo(zones.size()));
-
-        for (LoadZone z : LoadZone.values()) {
-            assertThat(zones, hasItem(z));
-        }
     }
 
 }
