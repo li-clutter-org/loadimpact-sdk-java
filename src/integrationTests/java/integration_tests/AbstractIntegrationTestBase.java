@@ -161,7 +161,7 @@ public abstract class AbstractIntegrationTestBase {
         }
         System.out.println();
 
-        assertThat(now(), lessThan(deadline));
+        assertThat("Max waiting time (" + maxWaitingTimeInSeconds + " secs) exceeded", now(), lessThan(deadline));
     }
 
     protected long now() {

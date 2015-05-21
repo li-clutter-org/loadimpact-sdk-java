@@ -22,7 +22,7 @@ public enum LoadZone {
     AMAZON_SG_SINGAPORE(14, "amazon:sg:singapore", "Singapore"),
     AMAZON_JP_TOKYO(15, "amazon:jp:tokyo", "Tokyo"),
     AMAZON_US_PORTLAND(22, "amazon:us:portland", "Portland"),
-    AMAZON_BR_SAOPAULO(23, "amazon:br:são paulo", "São Paulo"),
+    AMAZON_BR_SAOPAULO(23, "amazon:br:s\u00e3o paulo", "S\u00e3o Paulo"),
     AMAZON_AU_SYDNEY(25, "amazon:au:sydney", "Sydney"),
 
     /* Rackspace load zones */

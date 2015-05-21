@@ -26,7 +26,7 @@ import static org.junit.Assert.assertThat;
 public class FetchingLoadZones extends AbstractIntegrationTestBase {
 
     @Test
-    public void fetchAllTestZonesShouldPass() throws Exception { 
+    public void fetchAllTestZonesShouldPass() throws Exception {
         List<LoadZone> zones = client.getLoadZone();
         assertThat(zones, notNullValue());
         assertThat(LoadZone.values().length - 1, lessThanOrEqualTo(zones.size()));
@@ -42,7 +42,7 @@ public class FetchingLoadZones extends AbstractIntegrationTestBase {
         checkSingleZone("amazon", "au", "sydney");
         checkSingleZone("rackspace", "uk", "london");
         checkSingleZone("amazon", "us", "palo alto");
-        checkSingleZone("amazon", "br", "são paulo");
+        checkSingleZone("amazon", "br", "s\u00e3o paulo");
     }
 
     private void checkSingleZone(String provider, String country, String city) {
