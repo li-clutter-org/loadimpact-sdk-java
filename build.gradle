@@ -1,12 +1,11 @@
 import javax.tools.JavaCompiler
 
-//apply plugin: 'java'
-//apply plugin: 'maven-publish'
-
 plugins {
     id 'java'
+    id 'project-report'
+    id 'build-dashboard'
     id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '1.2.1'
+    id "eu.appsatori.fatjar" version "0.3"
 }
 
 group = 'com.loadimpact'
@@ -51,13 +50,43 @@ tasks.withType(JavaCompiler) {
     options.compilerArgs = ['-Xlint:unchecked']
 }
 
-task integrationTest(type: Test) {
-    testClassesDir = sourceSets.integrationTest.output.classesDir
-    classpath    = sourceSets.integrationTest.runtimeClasspath
-    reports.html.destination = file("$reports.html.destination/integration-tests")
-    reports.junitXml.destination = file("$reports.junitXml.destination/integration-tests")
+jar {
+    classifier = 'lib'
 }
 
-check.dependsOn integrationTest
+fatJar {
+    classifier = 'withDepends'
+    manifest {
+        attributes 'Main-Class': "com.loadimpact.CheckApp",
+                'Built-Date': new Date().format('yyyy-MM-dd HH:mm:dd'),
+                'Built-By': System.getProperty('user.name', 'gradle'),
+                'More-Info': 'http://developers.loadimpact.com/sdk/#li-docs-sdk-java',
+                'Source-Code': 'https://github.com/loadimpact/loadimpact-sdk-java'
+    }
+}
+
+assemble.dependsOn = [fatJar, jar]    //ensure we build both the plain JAR and the fat JAR
+
+test {
+    testLogging.showStandardStreams = true
+}
+
+task integrationTest(type: Test) {
+    testClassesDir = sourceSets.integrationTest.output.classesDir
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    testLogging.showStandardStreams = true
+    
+    reports.html.destination = file("${reports.html.destination}/../integration-tests")
+    reports.junitXml.destination = file("${reports.junitXml.destination}/integration-tests")
+
+    doFirst {
+        System.properties.findAll { it.key.toString().startsWith('loadimpact.') }.each { name, value ->
+            systemProperties[name] = value
+        }
+    }
+}
 
 
+javadoc {
+    options.tags = ['date:a:Created Date', 'user:a:Developed By']
+}

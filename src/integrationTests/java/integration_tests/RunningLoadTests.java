@@ -9,7 +9,6 @@ import com.loadimpact.resource.configuration.LoadScheduleStep;
 import com.loadimpact.resource.configuration.LoadTrack;
 import com.loadimpact.resource.configuration.UserType;
 import com.loadimpact.util.StringUtils;
-import org.junit.Before;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -19,7 +18,7 @@ import static org.junit.Assert.*;
 
 
 /**
- * DESCRIPTION
+ * Runs a full load-test.
  *
  * @user jens
  * @date 2015-05-15
@@ -29,8 +28,6 @@ public class RunningLoadTests extends AbstractIntegrationTestBase {
 
     @org.junit.Test
     public void starting_a_test_and_aborting_directly_should_pass() throws Exception {
-        client.setDebug(true);
-
         final int scenarioId   = createScenario();
         final int testConfigId = createTestConfig(TARGET_URL, scenarioId);
 
@@ -65,7 +62,6 @@ public class RunningLoadTests extends AbstractIntegrationTestBase {
 
     @org.junit.Test
     public void starting_a_test_monitoring_it_and_then_aborting_it_should_pass() throws Exception {
-        client.setDebug(true);
         final int scenarioId   = createScenario();
         final int testConfigId = createTestConfig(TARGET_URL, scenarioId);
 

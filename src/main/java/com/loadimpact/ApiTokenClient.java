@@ -120,34 +120,37 @@ public class ApiTokenClient {
      * @return itself (for chaining)
      */
     public ApiTokenClient setDebug(boolean debug) {
-        wsBase = configure(apiToken, debug, log, 1000);
-        return this;
+        return setDebug(debug, 10000);
     }
 
     /**
      * Enables REQ/RES debug logging. This method re-configures the web-target, via {@link #configure(String, boolean,
      * java.util.logging.Logger, int)}.
      *
+     * @param debug
+     *         true for logging
      * @param maxEntitySize
      *         max number of chars for dumping the content of an entity (e.g. response body)
      * @return itself (for chaining)
      */
-    public ApiTokenClient setDebug(int maxEntitySize) {
-        return setDebug(log, maxEntitySize);
+    public ApiTokenClient setDebug(boolean debug, int maxEntitySize) {
+        return setDebug(debug, maxEntitySize, log);
     }
-
+    
     /**
      * Enables REQ/RES debug logging. This method re-configures the web-target, via {@link #configure(String, boolean,
      * java.util.logging.Logger, int)}.
      *
+     * @param debug
+     *         true for logging
+     * @param maxEntitySize
+     *         max number of chars for dumping the content of an entity (e.g. response body)
      * @param log
      *         non-standard log stream
-     * @param maxEntitySize
-     *         max number of chars for dumping the content of an entity (e.g. response body)
      * @return itself (for chaining)
      */
-    public ApiTokenClient setDebug(Logger log, int maxEntitySize) {
-        wsBase = configure(apiToken, true, log, maxEntitySize);
+    public ApiTokenClient setDebug(boolean debug, int maxEntitySize, Logger log) {
+        wsBase = configure(apiToken, debug, log, maxEntitySize);
         return this;
     }
 
@@ -493,14 +496,17 @@ public class ApiTokenClient {
     }
 
     /**
-     * Returns true if we can successfully logon and fetch some test configs.
+     * Returns true if we can successfully logon and fetch some data.
      *
      * @return true     if can logon
      */
     public boolean isValidToken() {
         try {
-            Response response = wsBase.path(TEST_CONFIGS).request(MediaType.APPLICATION_JSON_TYPE).get();
-            return response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL;
+//            Response response = wsBase.path(TEST_CONFIGS).request(MediaType.APPLICATION_JSON_TYPE).get();
+//            return response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL;
+
+            LoadZone zone = getLoadZone(LoadZone.AMAZON_US_ASHBURN.uid);
+            return zone == LoadZone.AMAZON_US_ASHBURN;
         } catch (Exception e) {
             log.info("API token validation failed: " + e);
         }

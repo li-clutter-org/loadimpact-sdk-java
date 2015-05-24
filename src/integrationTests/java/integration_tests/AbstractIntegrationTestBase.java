@@ -20,9 +20,12 @@ import java.util.Properties;
  */
 public abstract class AbstractIntegrationTestBase {
     public static final String DEFAULT_TOKEN_PATH      = "../loadimpact-token.properties";
-    public static final String TOKEN_PROPERTY          = "loadimpact.token.file";
-    public static final String TOKEN_ENVIRONMENT       = "LOADIMPACT_TOKEN_FILE";
     public static final String INFO_MESSAGE            = "how_to_run_integration_tests.txt";
+    public static final String SYSPROP_TOKEN_FILE      = "loadimpact.token.file";
+    public static final String SYSPROP_HTTP_VERBOSE    = "loadimpact.http.verbose";
+    public static final String SYSPROP_HTTP_MAX        = "loadimpact.http.max";
+    public static final int    DEFAULT_MAX_CHARS       = 10000;
+    public static final String ENV_TOKEN_FILE          = "LOADIMPACT_TOKEN_FILE";
     public static final int    ONE_SECOND_AS_MILLISECS = 1000;
 
     protected static String         apiToken;
@@ -38,6 +41,31 @@ public abstract class AbstractIntegrationTestBase {
     @Before
     public void createClient() {
         client = new ApiTokenClient(apiToken);
+        if (showHttp()) {
+            client.setDebug(true, maxChars());
+        }
+    }
+
+    protected boolean showHttp() {
+        String showHttp = System.getProperty(SYSPROP_HTTP_VERBOSE);
+        if (showHttp != null) {
+            return Boolean.parseBoolean(showHttp);
+        }
+
+        return false;
+    }
+
+    protected int maxChars() {
+        String maxChars = System.getProperty(SYSPROP_HTTP_MAX);
+        if (maxChars != null) {
+            try {
+                return Integer.parseInt(maxChars);
+            } catch (NumberFormatException e) {
+                return DEFAULT_MAX_CHARS;
+            }
+        }
+
+        return DEFAULT_MAX_CHARS;
     }
 
 
@@ -61,12 +89,12 @@ public abstract class AbstractIntegrationTestBase {
             return reader;
         }
 
-        path = System.getProperty(TOKEN_PROPERTY);
+        path = System.getProperty(SYSPROP_TOKEN_FILE);
         if (path != null && (reader = openReader(path)) != null) {
             return reader;
         }
 
-        path = System.getenv(TOKEN_ENVIRONMENT);
+        path = System.getenv(ENV_TOKEN_FILE);
         if (path != null && (reader = openReader(path)) != null) {
             return reader;
         }
