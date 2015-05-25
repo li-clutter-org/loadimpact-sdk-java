@@ -1,7 +1,5 @@
-In order for the integration tests to run, it requires a valid API token and a test to run.
+In order for the integration tests to run, it requires a valid API token to run. Follow these steps:
 
-Steps
---------
 (1) Create a LoadImpact account, unless you already have it.
 
 (2) Get the API token.
@@ -16,8 +14,3 @@ Steps
     (alt 1) Save it with the file path "../loadimpact-token.properties" (i.e. in the parent director of this project)
     (alt 2) Set the Java system property "loadimpact.token.file" with the file path
     (alt 3) Set the environment variable "LOADIMPACT_TOKEN_FILE" with the file path
-
-(4) Create a test named "integration_test" and configure it to:
-    (a) Run for only 1 minute
-    (b) Use at most 10 users
-    (c) Checks the URL "https://loadimpact.com/"

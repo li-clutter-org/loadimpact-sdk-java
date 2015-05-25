@@ -9,33 +9,108 @@ The Load Impact Java SDK works with Java 6 or later. It has two dependencies (bo
 * [Jersey](https://jersey.java.net/)
 * [Joda-Time](http://www.joda.org/joda-time/)
 
-## Build
+# How to build
 
-Apache Maven is required for building this SDK.
+## Gradle
 
-Compile and build the JAR file
+[Gradle](https://gradle.org/) is required for building this SDK. The gradle wrapper is configured, which
+means there is no need to download and install gradle just to build this SDK. Just use the provided `gradlew` script.
 
-    mvn package
+    ./gradlew tasks         //*NIX
+    gradlew.bat tasks       //Windows
 
-The JAR can then be found in `target/`
+## JAR file(s)
 
-Compile and build an all-dependencies-included JAR file
+Compile and build the JAR file(s)
 
-    mvn assembly:assembly
+    gradlew assemble
 
-The JAR can then be found in `target/`
+The JAR files can then be found in the `./build/libs/` directory
 
-Generate the documentation
+    $ ls -lhF build/libs/
+    .... 133k ... loadimpact-sdk-java-1.4-lib.jar
+    .... 3.9M ... loadimpact-sdk-java-1.4-withDepends.jar
 
-    mvn site
+The '*-withDepends.jar' file contains this SDK together with all of its dependencies. Add this JAR file
+to the class-path of your application and you're good to go. 
 
-The docs can then be found in `target/site/`
+Use the '*-lib.jar' file if you plan to add the dependencies yourself. Check the `dependencies` block in
+`./build.gradle` to figure out which dependencies to add.
 
-## Tests
+## Check your API token
 
-Run the test suite
+The JAR file contains a small Java application that you can use to verify your API token.
+To obtain your API token, you can find it on your [loadimpact.com account page](https://loadimpact.com/account/).
+Run the app by
 
-    mvn test -Duser.timezone=UTC
+    java -jar ./build/libs/loadimpact-sdk-java-1.4-withDepends.jar {your API token here}
+
+If it was successful you will see a list of load-zones, else you will see a MissingApiToken exception.
+
+## Run unit tests
+
+Run the unit tests suite by
+
+    gradlew test
+    gradlew test --tests '*UrlMetric*'      //choose one or more test classes (omit the quotes on Windows)
+
+Gradle will generate a HTML test report in `./build/reports/tests/index.html`
+
+## Run integration tests
+
+This SDK also has a suite of integration tests, which all need to logon to a valid LoadImpact account, given a
+valid API token. If you try running the integration tests without a proper API token, you will see the following message
+
+    In order for the integration tests to run, it requires a valid API token to run. Follow these steps:
+    
+    (1) Create a LoadImpact account, unless you already have it.
+    
+    (2) Get the API token.
+        (a) Open the user profile (click a username)
+        (b) Choose tab "API Token"
+        (c) Generate a token, if needed
+        (d) Save the token to a Java properties file
+        (e) Add one single line (including EOL)
+            api.token=<your API token string here>
+    
+    (3) Save the token file 
+        (alt 1) Save it with the file path "../loadimpact-token.properties" (i.e. in the parent director of this project)
+        (alt 2) Set the Java system property "loadimpact.token.file" with the file path
+        (alt 3) Set the environment variable "LOADIMPACT_TOKEN_FILE" with the file path
+
+Choose your preferred way of providing the API token and run the integration tests suite by
+
+    gradlew integrationTest 
+    gradlew integrationTest --tests '*ApiToken*'    //choose one or more test classes (omit the quotes on Windows)
+
+Gradle will generate a HTML test report in `./build/reports/integration-tests/index.html`
+
+## Generate JavaDocs
+
+Generate the JavaDocs by
+
+    gradlew javadoc
+
+Gradle will generate the docs into `./build/docs/javadoc/index.html`
+
+## Generate a gradle project report
+
+Run the following command
+
+    gradlew projectReport
+
+This will generate a HTML file of all dependencies and their transitive dependencies in `./build/reports/project/dependencies/root.html`.
+In addition, there are some text file reports in `./build/reports/project/*.txt`
+
+## Cleaning up
+
+Run the following command to remove the build directory and all generated files
+
+    gradlew clean
+
+
+# Using the SDK
+
 
 ## Installation
 
@@ -45,17 +120,21 @@ Check the exact artifact names and versions used in the generated dependency doc
 use Maven, Gradle or a similar tool to just add the dependency of this SDK and the tool will take care of
 downloading and caching all dependent JAR files.
 
-The SDK is available through Maven Central, add the following to your dependencies
+The SDK JAR is also available through BinTray jCenter.
 
-```xml
-<dependencies>
-    <dependency>
-        <groupId>com.loadimpact</groupId>
-        <artifactId>Load-Impact-Java-SDK</artifactId>
-        <version>1.1.3</version>
-    </dependency>
-</dependencies>
+If you are using Gradle, add this configuration:
+
 ```
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile group: 'com.loadimpact', name: 'loadimpact-sdk-java', version: '1.4', classifier: 'withDepends'
+}
+```
+
+
 
 ## Creating an API client
 

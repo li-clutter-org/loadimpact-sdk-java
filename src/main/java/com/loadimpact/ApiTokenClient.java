@@ -442,7 +442,7 @@ public class ApiTokenClient {
                 case 400:
                     throw new BadRequestException(operation,id,action,e);
                 case 401:
-                    throw new MissingApiTokenException();
+                    throw new MissingApiTokenException(status.getReasonPhrase());
                 case 403:
                     throw new UnauthorizedException(operation,id,action);
                 case 404:

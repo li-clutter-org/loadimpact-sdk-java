@@ -36,6 +36,8 @@ public class CheckApp {
 
     public void run() {
         ApiTokenClient client = new ApiTokenClient(apiToken);
+        client.setDebug(true);
+        
         List<LoadZone> zones = client.getLoadZone();
         for (LoadZone zone : zones) {
             System.out.println(zone);
