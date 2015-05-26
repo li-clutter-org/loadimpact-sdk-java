@@ -1,16 +1,24 @@
 package integration_tests;
 
 import com.loadimpact.ApiTokenClient;
+import com.loadimpact.resource.LoadZone;
+import com.loadimpact.resource.TestConfiguration;
+import com.loadimpact.resource.UserScenario;
+import com.loadimpact.resource.configuration.LoadScheduleStep;
+import com.loadimpact.resource.configuration.LoadTrack;
+import com.loadimpact.resource.configuration.UserType;
 import com.loadimpact.util.StringUtils;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Properties;
 
 /**
@@ -27,6 +35,7 @@ public abstract class AbstractIntegrationTestBase {
     public static final int    DEFAULT_MAX_CHARS       = 10000;
     public static final String ENV_TOKEN_FILE          = "LOADIMPACT_TOKEN_FILE";
     public static final int    ONE_SECOND_AS_MILLISECS = 1000;
+    public static final String TARGET_URL = "https://loadimpact.com/";
 
     protected static String         apiToken;
     protected        ApiTokenClient client;
@@ -159,7 +168,7 @@ public abstract class AbstractIntegrationTestBase {
     }
 
     protected void waitFor(String what, WaitForClosure expr) {
-        waitFor(60, 5, what, expr);
+        waitFor(120, what, expr);
     }
 
     protected void waitFor(int maxWaitingTimeInSeconds, String what, WaitForClosure expr) {
@@ -169,7 +178,7 @@ public abstract class AbstractIntegrationTestBase {
     protected void waitFor(int maxWaitingTimeInSeconds, int sleepTimeInSeconds, String what, WaitForClosure expr) {
         final long deadline = now() + maxWaitingTimeInSeconds * ONE_SECOND_AS_MILLISECS;
 
-        System.out.println("Waiting for " + what);
+        System.out.printf("[%s] Waiting until %s %n", this.getClass().getSimpleName(), what);
         while (now() < deadline) {
             boolean done = false;
             try {
@@ -196,5 +205,45 @@ public abstract class AbstractIntegrationTestBase {
         return System.currentTimeMillis();
     }
 
+    protected UserScenario createScenario() {
+        final String scenarioScript = StringUtils.toString(getClass().getResourceAsStream(UsingScenarios.SCENARIO_RESOURCE));
+        final String scenarioName   = "integration_test_" + System.nanoTime();
 
+        UserScenario scenarioToBeCreated = new UserScenario();
+        scenarioToBeCreated.name = scenarioName;
+        scenarioToBeCreated.loadScript = scenarioScript;
+
+        UserScenario scenario = client.createUserScenario(scenarioToBeCreated);
+        assertThat(scenario, notNullValue());
+        assertThat(scenario.name, is(scenarioName));
+        assertThat(scenario.id, greaterThan(0));
+
+        return scenario;
+    }
+
+    protected TestConfiguration createTestConfig(String targetUrl, int scenarioId) throws MalformedURLException {
+        final String   configurationName = "integration_test_" + System.nanoTime();
+        final int      testDuration      = 1;
+        final int      testUserCount     = 10;
+        final LoadZone trackZone         = LoadZone.AMAZON_US_ASHBURN;
+        final int      trackPercentage   = 100;
+
+        final TestConfiguration configurationToBeCreated = new TestConfiguration();
+        configurationToBeCreated.name = configurationName;
+        configurationToBeCreated.url = new URL(targetUrl);
+        configurationToBeCreated.userType = UserType.SBU;
+        configurationToBeCreated.loadSchedule.add(new LoadScheduleStep(testDuration, testUserCount));
+        final LoadTrack track = new LoadTrack(trackZone);
+        track.clip(trackPercentage, scenarioId);
+        configurationToBeCreated.tracks.add(track);
+
+        TestConfiguration configuration = client.createTestConfiguration(configurationToBeCreated);
+        assertThat(configuration, notNullValue());
+        assertThat(configuration.name, is(configurationName));
+        assertThat(configuration.id, greaterThan(0));
+
+        return configuration;
+    }
+    
+    
 }

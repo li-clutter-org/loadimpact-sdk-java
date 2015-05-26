@@ -39,7 +39,7 @@ public class Test implements Serializable {
     public Test(JsonObject json) {
         this.id = json.getInt("id", 0);
         this.title = json.getString("title", null);
-        this.status = Status.valueOf(json.getInt("status", 0));
+        this.status = Status.valueOf(json.getInt("status", -1));
         this.started = DateUtils.toDateFromIso8601(json.getString("started", null));
         this.ended = DateUtils.toDateFromIso8601(json.getString("ended", null));
 

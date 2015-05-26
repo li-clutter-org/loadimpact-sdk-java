@@ -5,7 +5,7 @@ import com.loadimpact.resource.Status;
 import java.util.Arrays;
 
 /**
- * DESCRIPTION
+ * Tracks the state transitions for progress monitoring.
  *
  * @author jens
  */
@@ -28,13 +28,15 @@ public enum LoadTestState {
     public LoadTestState moveToNext(Status status) {
         return moveToNext(status, false);
     }
-    
-    public LoadTestState moveToNext(Status status, boolean condition) {
-        if (this == notStarted && status == Status.INITIALIZING) return initializing;
-        if (this == initializing && status == Status.RUNNING) return warmingUp;
-        if (this == warmingUp && status == Status.RUNNING && condition) return checkingThresholds;
-        if (this == checkingThresholds && status == Status.RUNNING && condition) return finishing;
-        if (this == finishing && status == Status.FINISHED) return terminated;
+
+    public LoadTestState moveToNext(Status status, boolean shouldTransition) {
+        if (status == Status.CREATED || status == Status.QUEUED) return notStarted;
+        if (status == Status.INITIALIZING) return initializing;
+        if (status == Status.RUNNING && (this == notStarted || this == initializing)) return warmingUp;
+
+        if (status == Status.RUNNING && this == warmingUp && shouldTransition) return checkingThresholds;
+        if (status == Status.RUNNING && this == checkingThresholds && shouldTransition) return finishing;
+        if (status.isCompleted()) return terminated;
 
         return this;
     }

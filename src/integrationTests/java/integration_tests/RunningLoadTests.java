@@ -24,22 +24,22 @@ import static org.junit.Assert.*;
  * @date 2015-05-15
  */
 public class RunningLoadTests extends AbstractIntegrationTestBase {
-    public static final String TARGET_URL = "https://loadimpact.com/";
+    
 
     @org.junit.Test
     public void starting_a_test_and_aborting_directly_should_pass() throws Exception {
-        final int scenarioId   = createScenario();
-        final int testConfigId = createTestConfig(TARGET_URL, scenarioId);
+        final UserScenario scenario   = createScenario();
+        final TestConfiguration testConfig = createTestConfig(TARGET_URL, scenario.id);
 
         try {
-            final int testId = client.startTest(testConfigId);
+            final int testId = client.startTest(testConfig.id);
             assertThat(testId, greaterThan(0));
 
             Test test = client.getTest(testId);
             assertThat(test, notNullValue());
             assertThat(test.id, is(testId));
 
-            waitFor(120, "test has start running", new WaitForClosure() {
+            waitFor("load-test has state==running", new WaitForClosure() {
                 @Override
                 public boolean isDone() {
                     Test test = client.getTest(testId);
@@ -55,25 +55,25 @@ public class RunningLoadTests extends AbstractIntegrationTestBase {
             assertThat(test, notNullValue());
             assertThat(test.status, anyOf(is(Status.ABORTING_BY_USER), is(Status.ABORTED_BY_USER)));
         } finally {
-            client.deleteTestConfiguration(testConfigId);
-            client.deleteUserScenario(scenarioId);
+            client.deleteTestConfiguration(testConfig.id);
+            client.deleteUserScenario(scenario.id);
         }
     }
 
     @org.junit.Test
     public void starting_a_test_monitoring_it_and_then_aborting_it_should_pass() throws Exception {
-        final int scenarioId   = createScenario();
-        final int testConfigId = createTestConfig(TARGET_URL, scenarioId);
+        final UserScenario scenario   = createScenario();
+        final TestConfiguration testConfig = createTestConfig(TARGET_URL, scenario.id);
 
         try {
-            final int testId = client.startTest(testConfigId);
+            final int testId = client.startTest(testConfig.id);
             assertThat(testId, greaterThan(0));
 
             Test test = client.getTest(testId);
             assertThat(test, notNullValue());
             assertThat(test.id, is(testId));
 
-            waitFor(120, "test has start running", new WaitForClosure() {
+            waitFor("load-test has state==running", new WaitForClosure() {
                 @Override
                 public boolean isDone() {
                     Test test = client.getTest(testId);
@@ -118,25 +118,25 @@ public class RunningLoadTests extends AbstractIntegrationTestBase {
             assertThat(test, notNullValue());
             assertThat(test.status, anyOf(is(Status.ABORTING_BY_USER), is(Status.ABORTED_BY_USER)));
         } finally {
-            client.deleteTestConfiguration(testConfigId);
-            client.deleteUserScenario(scenarioId);
+            client.deleteTestConfiguration(testConfig.id);
+            client.deleteUserScenario(scenario.id);
         }
     }
 
     @org.junit.Test
     public void starting_a_test_monitoring_it_and_waiting_for_completion_should_pass() throws Exception {
-        final int scenarioId   = createScenario();
-        final int testConfigId = createTestConfig(TARGET_URL, scenarioId);
+        final UserScenario scenario   = createScenario();
+        final TestConfiguration testConfig = createTestConfig(TARGET_URL, scenario.id);
 
         try {
-            final int testId = client.startTest(testConfigId);
+            final int testId = client.startTest(testConfig.id);
             assertThat(testId, greaterThan(0));
 
             Test test = client.getTest(testId);
             assertThat(test, notNullValue());
             assertThat(test.id, is(testId));
 
-            waitFor(120, "test has start running", new WaitForClosure() {
+            waitFor("load-test has state==running", new WaitForClosure() {
                 @Override
                 public boolean isDone() {
                     Test test = client.getTest(testId);
@@ -179,50 +179,10 @@ public class RunningLoadTests extends AbstractIntegrationTestBase {
             assertThat(test, notNullValue());
             assertThat(test.status.isSuccessful(), is(true));
         } finally {
-            client.deleteTestConfiguration(testConfigId);
-            client.deleteUserScenario(scenarioId);
+            client.deleteTestConfiguration(testConfig.id);
+            client.deleteUserScenario(scenario.id);
         }
     }
 
-
-    private int createScenario() {
-        final String scenarioScript = StringUtils.toString(getClass().getResourceAsStream(UsingScenarios.SCENARIO_RESOURCE));
-        final String scenarioName   = "integration_test_" + System.nanoTime();
-
-        UserScenario scenarioToBeCreated = new UserScenario();
-        scenarioToBeCreated.name = scenarioName;
-        scenarioToBeCreated.loadScript = scenarioScript;
-
-        UserScenario scenario = client.createUserScenario(scenarioToBeCreated);
-        assertThat(scenario, notNullValue());
-        assertThat(scenario.name, is(scenarioName));
-        assertThat(scenario.id, greaterThan(0));
-
-        return scenario.id;
-    }
-
-    private int createTestConfig(String targetUrl, int scenarioId) throws MalformedURLException {
-        final String   configurationName = "integration_test_" + System.nanoTime();
-        final int      testDuration      = 1;
-        final int      testUserCount     = 10;
-        final LoadZone trackZone         = LoadZone.AMAZON_US_ASHBURN;
-        final int      trackPercentage   = 100;
-
-        final TestConfiguration configurationToBeCreated = new TestConfiguration();
-        configurationToBeCreated.name = configurationName;
-        configurationToBeCreated.url = new URL(targetUrl);
-        configurationToBeCreated.userType = UserType.SBU;
-        configurationToBeCreated.loadSchedule.add(new LoadScheduleStep(testDuration, testUserCount));
-        final LoadTrack track = new LoadTrack(trackZone);
-        track.clip(trackPercentage, scenarioId);
-        configurationToBeCreated.tracks.add(track);
-
-        TestConfiguration configuration = client.createTestConfiguration(configurationToBeCreated);
-        assertThat(configuration, notNullValue());
-        assertThat(configuration.name, is(configurationName));
-        assertThat(configuration.id, greaterThan(0));
-
-        return configuration.id;
-    }
 
 }

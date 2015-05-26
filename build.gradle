@@ -75,7 +75,7 @@ task integrationTest(type: Test) {
     testClassesDir = sourceSets.integrationTest.output.classesDir
     classpath = sourceSets.integrationTest.runtimeClasspath
     testLogging.showStandardStreams = true
-    
+
     reports.html.destination = file("${reports.html.destination}/../integration-tests")
     reports.junitXml.destination = file("${reports.junitXml.destination}/integration-tests")
 
@@ -88,5 +88,32 @@ task integrationTest(type: Test) {
 
 
 javadoc {
+    options.overview = "./src/docs/javadoc-overview.html"
     options.tags = ['date:a:Created Date', 'user:a:Developed By']
 }
+
+
+publishing {
+    publications {
+        fat(MavenPublication) {
+            artifact fatJar {
+                classifier 'withDepends'
+            }
+        }
+
+        lib(MavenPublication) {
+            artifact jar {
+                classifier 'lib'
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url "${buildDir}/mvn-repo"
+        }
+        
+        // bintray repo
+    }
+}
+

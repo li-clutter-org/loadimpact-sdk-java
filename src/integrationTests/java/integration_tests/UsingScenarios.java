@@ -83,32 +83,27 @@ public class UsingScenarios extends AbstractIntegrationTestBase {
 
         
         // Start validate
-        UserScenarioValidation validation = client.createUserScenarioValidation(scenarioId);
+        final UserScenarioValidation validation = client.createUserScenarioValidation(scenarioId);
         assertThat(validation, notNullValue());
         assertThat(validation.scenarioId, is(scenarioId));
-        final int validationId = validation.id;
+        
+        waitFor("scenario-validation is ready", new WaitForClosure() {
+            @Override
+            public boolean isDone() {
+                UserScenarioValidation v = client.getUserScenarioValidation(validation.id);
+                return v.status == UserScenarioValidation.Status.FINISHED;
+            }
+        });
 
+        UserScenarioValidation readyValidation = client.getUserScenarioValidation(validation.id);
+        assertThat(readyValidation.status, is(UserScenarioValidation.Status.FINISHED));
+        assertThat(readyValidation.ended, notNullValue());
 
-        // Wait for validation completed
-        final int  maxRetries = 30;
-        final long delay      = 10 * 1000;
-        int        retry      = 0;
-        do {
-            validation = client.getUserScenarioValidation(validationId);
-            if (validation.status == UserScenarioValidation.Status.FINISHED) break;
-
-            System.out.println("*** Waiting for scenario validation '" + scenarioName + "' to become ready. ");
-            Thread.sleep(delay);
-        } while (++retry < maxRetries);
-        assertThat(validation.status, is(UserScenarioValidation.Status.FINISHED));
-        assertThat(validation.ended, notNullValue());
-
-        UserScenarioValidation results = client.getUserScenarioValidationResults(validation);
+        UserScenarioValidation results = client.getUserScenarioValidationResults(readyValidation);
         assertThat(results, notNullValue());
         assertThat(results.results.size(), greaterThanOrEqualTo(1));
         assertThat(results.results.get(0).timestamp, notNullValue());
         assertThat(results.results.get(0).message, containsString("finished"));
-
 
         // Delete it
         client.deleteUserScenario(scenarioId);

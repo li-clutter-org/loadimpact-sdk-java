@@ -37,7 +37,7 @@ public class UsingTestConfigurations extends AbstractIntegrationTestBase {
         final int      testUserCount     = 10;
         final LoadZone trackZone         = LoadZone.AMAZON_US_ASHBURN;
         final int      trackPercentage   = 100;
-        int            trackScenarioId   = createScenario();
+        UserScenario trackScenario   = createScenario();
 
         // prepare
         final TestConfiguration configurationToBeCreated = new TestConfiguration();
@@ -46,7 +46,7 @@ public class UsingTestConfigurations extends AbstractIntegrationTestBase {
         configurationToBeCreated.userType = UserType.SBU;
         configurationToBeCreated.loadSchedule.add(new LoadScheduleStep(testDuration, testUserCount));
         final LoadTrack track = new LoadTrack(trackZone);
-        track.clip(trackPercentage, trackScenarioId);
+        track.clip(trackPercentage, trackScenario.id);
         configurationToBeCreated.tracks.add(track);
 
         // create
@@ -74,7 +74,7 @@ public class UsingTestConfigurations extends AbstractIntegrationTestBase {
         } catch (ApiException ignore) {
         }
 
-        client.deleteUserScenario(trackScenarioId);
+        client.deleteUserScenario(trackScenario.id);
     }
 
 
@@ -86,7 +86,7 @@ public class UsingTestConfigurations extends AbstractIntegrationTestBase {
         final int      testUserCount     = 10;
         final LoadZone trackZone         = LoadZone.AMAZON_US_ASHBURN;
         final int      trackPercentage   = 100;
-        int            trackScenarioId   = createScenario();
+        UserScenario trackScenario   = createScenario();
 
         // prepare
         final TestConfiguration configurationToBeCreated = new TestConfiguration();
@@ -95,7 +95,7 @@ public class UsingTestConfigurations extends AbstractIntegrationTestBase {
         configurationToBeCreated.userType = UserType.SBU;
         configurationToBeCreated.loadSchedule.add(new LoadScheduleStep(testDuration, testUserCount));
         final LoadTrack track = new LoadTrack(trackZone);
-        track.clip(trackPercentage, trackScenarioId);
+        track.clip(trackPercentage, trackScenario.id);
         configurationToBeCreated.tracks.add(track);
 
         // create
@@ -115,7 +115,7 @@ public class UsingTestConfigurations extends AbstractIntegrationTestBase {
         // delete
         client.deleteTestConfiguration(configurationCloned.id);
         client.deleteTestConfiguration(configuration.id);
-        client.deleteUserScenario(trackScenarioId);
+        client.deleteUserScenario(trackScenario.id);
     }
 
 
@@ -127,7 +127,7 @@ public class UsingTestConfigurations extends AbstractIntegrationTestBase {
         final int      testUserCount     = 10;
         final LoadZone trackZone         = LoadZone.AMAZON_US_ASHBURN;
         final int      trackPercentage   = 100;
-        int            trackScenarioId   = createScenario();
+        UserScenario trackScenario   = createScenario();
 
         // prepare
         final TestConfiguration configurationToBeCreated = new TestConfiguration();
@@ -136,7 +136,7 @@ public class UsingTestConfigurations extends AbstractIntegrationTestBase {
         configurationToBeCreated.userType = UserType.SBU;
         configurationToBeCreated.loadSchedule.add(new LoadScheduleStep(testDuration, testUserCount));
         final LoadTrack track = new LoadTrack(trackZone);
-        track.clip(trackPercentage, trackScenarioId);
+        track.clip(trackPercentage, trackScenario.id);
         configurationToBeCreated.tracks.add(track);
 
         // create
@@ -158,24 +158,7 @@ public class UsingTestConfigurations extends AbstractIntegrationTestBase {
         
         // delete
         client.deleteTestConfiguration(configuration.id);
-        client.deleteUserScenario(trackScenarioId);
+        client.deleteUserScenario(trackScenario.id);
     }
-
-    private int createScenario() {
-        final String scenarioScript = StringUtils.toString(getClass().getResourceAsStream(UsingScenarios.SCENARIO_RESOURCE));
-
-        final String scenarioName        = "integration_test_" + System.nanoTime();
-        UserScenario scenarioToBeCreated = new UserScenario();
-        scenarioToBeCreated.name = scenarioName;
-        scenarioToBeCreated.loadScript = scenarioScript;
-
-        UserScenario scenario = client.createUserScenario(scenarioToBeCreated);
-        assertThat(scenario, notNullValue());
-        assertThat(scenario.name, is(scenarioName));
-        assertThat(scenario.id, greaterThan(0));
-
-        return scenario.id;
-    }
-
 
 }

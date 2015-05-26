@@ -25,32 +25,26 @@ public class UsingDataStores extends AbstractIntegrationTestBase {
     public static final String DATASTORE_RESOURCE = "datastore.csv";
 
     @Test 
-//    @Ignore("Server-side hangs during upload")
-    public void create_get_delete_of_ds_should_pass() throws Exception {
+    public void create_get_delete_of_ds_should_pass() throws Exception { 
         // Prepare
         String dsName = "integration_test_" + System.nanoTime();
         File   dsFile = File.createTempFile("datastore", ".csv");
         copy(getClass().getResourceAsStream(DATASTORE_RESOURCE), new FileOutputStream(dsFile));
 
         // Create DS
-        DataStore ds = client.createDataStore(dsFile, dsName, 2, DataStore.Separator.SEMICOLON, DataStore.StringDelimiter.DOUBLEQUOTE);
+        final DataStore ds = client.createDataStore(dsFile, dsName, 2, DataStore.Separator.SEMICOLON, DataStore.StringDelimiter.DOUBLEQUOTE);
         assertThat(ds, notNullValue());
         assertThat(ds.name, is(dsName));
 
-        // Fetch and wait for it's ready
-        final int maxRetries = 10;
-        final int delay      = 5 * 1000;
-        final int dsId       = ds.id;
-        int       retry      = 1;
-        do { //TODO: use waitFor() instead 
-            ds = client.getDataStore(dsId);
-            if (ds.status == DataStore.Status.READY) break;
-
-            System.out.printf("*** Waiting for data-store '" + dsName + "' to become ready. # %d(%d)%n", retry, maxRetries);
-            Thread.sleep(delay);
-        } while (++retry <= maxRetries);
-        assertThat("Waiting for DS to be ready, but it's taken way too long time", ds.status, is(DataStore.Status.READY));
-        assertThat(ds.rows, is(3));
+        waitFor("data-store is ready", new WaitForClosure() {
+            @Override
+            public boolean isDone() {
+                return client.getDataStore(ds.id).status == DataStore.Status.READY;
+            }
+        });
+        DataStore readyDS = client.getDataStore(ds.id);
+        assertThat("Waiting for DS to be ready, but it has taken way too long time", readyDS.status, is(DataStore.Status.READY));
+        assertThat(readyDS.rows, is(3));
 
         // Fetch all DS
         List<DataStore> allDS = client.getDataStores();
@@ -58,9 +52,9 @@ public class UsingDataStores extends AbstractIntegrationTestBase {
         assertThat(allDS.size(), greaterThanOrEqualTo(1));
 
         // Delete it
-        client.deleteDataStore(dsId);
+        client.deleteDataStore(readyDS.id);
         try {
-            client.getDataStore(ds.id);
+            client.getDataStore(readyDS.id);
             fail("Expected exception: NotFound");
         } catch (ApiException ignore) {
         }
