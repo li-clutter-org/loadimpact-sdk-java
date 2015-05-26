@@ -13,8 +13,10 @@ The Load Impact Java SDK works with Java 6 or later. It has two dependencies (bo
 
 ## Gradle
 
-[Gradle](https://gradle.org/) is required for building this SDK. The gradle wrapper is configured, which
-means there is no need to download and install gradle just to build this SDK. Just use the provided `gradlew` script.
+[Gradle](https://gradle.org/) is required for building this SDK. 
+There is no need to download and install gradle, because the 
+[gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) is configured for this project.
+Just use the provided `gradlew` script.
 
     ./gradlew tasks         //*NIX
     gradlew.bat tasks       //Windows
@@ -61,22 +63,26 @@ Gradle will generate a HTML test report in `./build/reports/tests/index.html`
 This SDK also has a suite of integration tests, which all need to logon to a valid LoadImpact account, given a
 valid API token. If you try running the integration tests without a proper API token, you will see the following message
 
-    In order for the integration tests to run, it requires a valid API token to run. Follow these steps:
-    
+In order for the integration tests to run, it requires a valid API token to run. Follow these steps:
+
     (1) Create a LoadImpact account, unless you already have it.
     
     (2) Get the API token.
         (a) Open the user profile (click a username)
         (b) Choose tab "API Token"
         (c) Generate a token, if needed
-        (d) Save the token to a Java properties file
-        (e) Add one single line (including EOL)
-            api.token=<your API token string here>
+        (d) Save the token for later use
     
-    (3) Save the token file 
-        (alt 1) Save it with the file path "../loadimpact-token.properties" (i.e. in the parent director of this project)
-        (alt 2) Set the Java system property "loadimpact.token.file" with the file path
-        (alt 3) Set the environment variable "LOADIMPACT_TOKEN_FILE" with the file path
+    (3a) Provide the API token directly
+         Using the Java system property "loadimpact.token"
+         
+    (3b) Provide the API token via a properties file
+         Create a file with one single line (including EOL)
+            api.token=<your API token string here>
+         Provide the token-file by any of:
+        (i)     Save it with the file path "../loadimpact-token.properties" (i.e. in the parent directory)
+        (ii)    Set the Java system property "loadimpact.token.file" with the file path
+        (iii)   Set the environment variable "LOADIMPACT_TOKEN_FILE" with the file path
 
 Choose your preferred way of providing the API token and run the integration tests suite by
 
@@ -84,6 +90,21 @@ Choose your preferred way of providing the API token and run the integration tes
     gradlew integrationTest --tests '*ApiToken*'    //choose one or more test classes (omit the quotes on Windows)
 
 Gradle will generate a HTML test report in `./build/reports/integration-tests/index.html`
+
+### Integration test configuration
+
+You can enable HTTP trace outputs using Java system properties
+
+| Name | Type | Description |
+|------|-----|-----------|
+| `loadimpact.http.verbose` | Boolean | Set to `true`, to enable HTTP log print-outs. |
+| `loadimpact.http.max` | Integer | When HTTP logging enabled, sets the max number of characters printed for each log print-out. |
+| `loadimpact.token` | String | The API token |
+| `loadimpact.token.file` | Path | Path to a Java properties file with the API token as the value of `api.token` |
+
+Add system properties to gradle by `-Dname=value`. Here is one example:
+
+    gradlew -Dloadimpact.http.verbose=true integrationTest --tests '*Running*'
 
 ## Generate JavaDocs
 
@@ -114,26 +135,45 @@ Run the following command to remove the build directory and all generated files
 
 ## Installation
 
-If the SDK is packaged as a zip-file, then unpack it and grab the JAR file. Add the jar file to the class-path.
+It's probably easiest to use Maven or Gradle to just add the dependency of the `withDepends` file as 
+described below. If you just want the SDK classes, change classifier to 'lib'.
+Configure where and what to fetch as dependency as shown below.
 
-Check the exact artifact names and versions used in the generated dependency documentation. It's probably easiest to
-use Maven, Gradle or a similar tool to just add the dependency of this SDK and the tool will take care of
-downloading and caching all dependent JAR files.
+Remember to double-check the version number below, so you go with the latest version.
 
-The SDK JAR is also available through BinTray jCenter.
+### Gradle
 
-If you are using Gradle, add this configuration:
+    repositories {
+        maven {
+            url  "http://dl.bintray.com/ribomation/maven" 
+        }
+    }
+    dependencies {   
+        compile group: 'com.loadimpact', name: 'loadimpact-sdk-java', version: '1.4', classifier: 'withDepends'
+    }
 
-```
-repositories {
-    jcenter()
-}
+### Maven
 
-dependencies {
-    compile group: 'com.loadimpact', name: 'loadimpact-sdk-java', version: '1.4', classifier: 'withDepends'
-}
-```
+    <repositories>
+        <repository>
+            <id>bintray</id>
+            <url>http://dl.bintray.com/ribomation/maven/</url>
+        </repository>
+    </repositories>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.loadimpact</groupId>
+            <artifactId>loadimpact-sdk-java</artifactId>
+            <version>1.4</version>
+            <type>jar</type>
+            <classifier>withDepends</classifier>
+        </dependency>
+    </dependencies>
+
+### ZIP Distribution
+
+If the SDK is packaged as a zip-file, then unpack it, grab the JAR file and add the jar file to the class-path of your application.
 
 
 ## Creating an API client
@@ -149,13 +189,132 @@ import com.loadimpact.ApiTokenClient;
 ApiTokenClient client = new ApiTokenClient("YOUR_API_TOKEN_GOES_HERE");
 ```
 
-## Using an API client
+# Sample minimal application
+
+Create the following project directory structure:
+
+    $ mkdir -p path/to/my/appdir
+    $ cd path/to/my/appdir
+    $ mkdir -p src/main/java
+    $ touch build.gradle pom.xml src/main/java/App.java
+    $ tree
+    |   build.gradle
+    |   pom.xml
+    \---src
+        \---main
+            \---java
+                    App.java    
+
+## Java
+
+Add the following Java code to `App.java`:
+
+```java
+import com.loadimpact.ApiTokenClient;
+import com.loadimpact.resource.LoadZone;
+import java.util.List;
+
+public class App {
+    static String token = "your LoadImpact API token here";
+
+    public static void main(String[] args) {
+        ApiTokenClient client = new ApiTokenClient(token);        
+        client.setDebug(true);
+        
+        List<LoadZone> zones = client.getLoadZone();
+        for (LoadZone zone : zones) {
+            System.out.println(zone);
+        }
+    }
+}
+```
+
+## Gradle
+
+If you plan on using Gradle, add the following content to `build.gradle`:
+
+```groovy
+apply plugin: 'java'
+apply plugin: 'application'
+
+group   = 'whatever'
+version = '1.0'
+
+repositories {
+    maven {
+        url  "http://dl.bintray.com/ribomation/maven" 
+    }
+}
+
+dependencies {   
+    compile group: 'com.loadimpact', name: 'loadimpact-sdk-java', version: '1.4', classifier: 'withDepends'
+}
+
+mainClassName = 'App'   //RUN: gradle run
+```
+
+Compile and run the application using
+
+    gradle build run
+
+
+## Maven
+
+If you plan on using Maven (instead of Gradle), add the following content to pom.xml:
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>whatever</groupId>
+    <artifactId>check-my-account</artifactId>
+    <version>1.0</version>
+    <packaging>jar</packaging>
+
+    <repositories>
+        <repository>
+            <id>bintray</id>
+            <url>http://dl.bintray.com/ribomation/maven/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.loadimpact</groupId>
+            <artifactId>loadimpact-sdk-java</artifactId>
+            <version>1.4</version>
+            <type>jar</type>
+            <classifier>withDepends</classifier>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.1</version>
+                <configuration>
+                    <mainClass>App</mainClass> <!-- RUN: mvn exec:java -->
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>    
+</project>
+```
+
+Compile and run the application using
+
+    mvn package exec:java
+
+
+# Using an API client
 
 All API calls performed by the client are so called synchronous run-to-completion, which means that it connects 
 (via HTTPS) to the Load Impact API, sends the request and waits for the JSON response which is transformed
 into a value object. The connections is closed after each API call.
 
-### List test configurations
+## List test configurations
 ```java
 import com.loadimpact.ApiTokenClient;
 import com.loadimpact.resource.TestConfiguration;
@@ -169,7 +328,8 @@ public class ListTestConfigsExample {
 }
 ```
 
-### Get a specific test configurations
+## Get a specific test configurations
+
 ```java
 import com.loadimpact.ApiTokenClient;
 import com.loadimpact.resource.TestConfiguration;
@@ -183,7 +343,8 @@ public class ListTestConfigsExample {
 }
 ```
 
-### Create a new test configuration
+## Create a new test configuration
+
 ```java
 import com.loadimpact.ApiTokenClient;
 import com.loadimpact.resource.LoadZone;
@@ -232,7 +393,7 @@ LoadZone.RACKSPACE_UK_LONDON;
 LoadZone.RACKSPACE_AU_SYDNEY;
 ```
 
-### Update an existing test configuration
+## Update an existing test configuration
 ```java
 import com.loadimpact.ApiTokenClient;
 import com.loadimpact.resource.TestConfiguration;
@@ -248,7 +409,7 @@ public class UpdateTestConfigExample {
 }
 ```
 
-### Delete config
+## Delete config
 ```java
 import com.loadimpact.ApiTokenClient;
 
@@ -261,7 +422,7 @@ public class DeleteTestConfigExample {
 }
 ```
 
-### Run test and stream results to STDOUT
+## Run test and stream results to STDOUT
 ```java
 import com.loadimpact.ApiTokenClient;
 import com.loadimpact.resource.LoadZone;
@@ -294,7 +455,7 @@ public class RunTestAndStreamResultsExample {
 }
 ```
 
-### Create a new user scenario
+## Create a new user scenario
 ```java
 import com.loadimpact.ApiTokenClient;
 import com.loadimpact.resource.UserScenario;
@@ -313,7 +474,7 @@ public class CreateUserScenarioExample {
 }
 ```
 
-### Validating a user scenario
+## Validating a user scenario
 ```java
 import com.loadimpact.ApiTokenClient;
 import com.loadimpact.resource.UserScenarioValidation;
@@ -338,7 +499,7 @@ public class UserScenarioValidationExample {
 }
 ```
 
-### Uploading a data store (CSV file with parameterization data)
+## Uploading a data store (CSV file with parameterization data)
 For more information regarding parameterized data have a look at [this
 knowledgebase article](http://support.loadimpact.com/knowledgebase/articles/174258-how-do-i-use-parameterized-data-).
 
@@ -365,7 +526,7 @@ public class CreateDataStoreExample {
 }
 ```
 
-### Adding a data store to a user scenario
+## Adding a data store to a user scenario
 ```java
 import com.loadimpact.ApiTokenClient;
 import com.loadimpact.resource.DataStore;

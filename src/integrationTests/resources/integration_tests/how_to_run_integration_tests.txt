@@ -6,11 +6,15 @@ In order for the integration tests to run, it requires a valid API token to run.
     (a) Open the user profile (click a username)
     (b) Choose tab "API Token"
     (c) Generate a token, if needed
-    (d) Save the token to a Java properties file
-    (e) Add one single line (including EOL)
-        api.token=<your API token string here>
+    (d) Save the token for later use
 
-(3) Save the token file 
-    (alt 1) Save it with the file path "../loadimpact-token.properties" (i.e. in the parent director of this project)
-    (alt 2) Set the Java system property "loadimpact.token.file" with the file path
-    (alt 3) Set the environment variable "LOADIMPACT_TOKEN_FILE" with the file path
+(3a) Provide the API token directly
+     Using the Java system property "loadimpact.token"
+     
+(3b) Provide the API token via a properties file
+     Create a file with one single line (including EOL)
+        api.token=<your API token string here>
+     Provide the token-file by any of:
+    (i)     Save it with the file path "../loadimpact-token.properties" (i.e. in the parent directory)
+    (ii)    Set the Java system property "loadimpact.token.file" with the file path
+    (iii)   Set the environment variable "LOADIMPACT_TOKEN_FILE" with the file path
