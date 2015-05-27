@@ -1,4 +1,4 @@
-# Load Impact Java SDK [![Build Status](https://travis-ci.org/loadimpact/loadimpact-sdk-java.png?branch=master,develop)](https://travis-ci.org/loadimpact/loadimpact-sdk-java)
+# Load Impact Java SDK [![Build Status](https://travis-ci.org/loadimpact/loadimpact-sdk-java.png?branch=master,develop)](https://travis-ci.org/loadimpact/loadimpact-sdk-java) [ ![Download](https://api.bintray.com/packages/ribomation/maven/loadimpact-sdk-java/images/download.svg) ](https://bintray.com/ribomation/maven/loadimpact-sdk-java/_latestVersion)
 
 This Java SDK provides Java APIs to the Load Impact platform for running 
 and managing performance tests in the cloud.
@@ -63,7 +63,7 @@ Gradle will generate a HTML test report in `./build/reports/tests/index.html`
 This SDK also has a suite of integration tests, which all need to logon to a valid LoadImpact account, given a
 valid API token. If you try running the integration tests without a proper API token, you will see the following message
 
-In order for the integration tests to run, it requires a valid API token to run. Follow these steps:
+    In order for the integration tests to run, it requires a valid API token to run. Follow these steps:
 
     (1) Create a LoadImpact account, unless you already have it.
     
@@ -135,11 +135,9 @@ Run the following command to remove the build directory and all generated files
 
 ## Installation
 
-It's probably easiest to use Maven or Gradle to just add the dependency of the `withDepends` file as 
-described below. If you just want the SDK classes, change classifier to 'lib'.
-Configure where and what to fetch as dependency as shown below.
-
-Remember to double-check the version number below, so you go with the latest version.
+It's probably easiest to use Maven or Gradle to just add the dependency of the `withDepends` JAR file. If you just 
+want the SDK classes, change classifier to 'lib'. Configure where and what to fetch as dependency as shown below. 
+Remember to double-check the version number, so you go with the latest SDK version.
 
 ### Gradle
 
