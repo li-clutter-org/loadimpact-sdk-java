@@ -9,7 +9,7 @@ plugins {
 }
 
 group = 'com.loadimpact'
-version = '1.4'
+version = '1.4.1'
 
 ext {
     jerseyVersion = '2.17'
@@ -72,6 +72,8 @@ test {
 }
 
 task integrationTest(type: Test) {
+    group = 'verification'
+    description = 'Runs the integration tests, which all connects to the Load-Impact server'
     testClassesDir = sourceSets.integrationTest.output.classesDir
     classpath = sourceSets.integrationTest.runtimeClasspath
     testLogging.showStandardStreams = true
@@ -112,8 +114,38 @@ publishing {
         maven {
             url "${buildDir}/mvn-repo"
         }
-        
+
         // bintray repo
     }
 }
+
+
+task saveBuildData {
+    group = 'build'
+    description = 'Saves build data into a class-path properites file'
+
+    doLast {
+        def buildData = [:] as Properties
+        buildData.name = project.name
+        buildData.group = project.group
+        buildData.version = project.version
+        buildData.date = new Date().format('yyyy-MM-dd HH:mm:ss')
+        buildData.user = System.getProperty('user.name', 'gradle')
+        buildData.src = 'https://github.com/loadimpact/loadimpact-sdk-java'
+        buildData.web = 'https://github.com/loadimpact/loadimpact-sdk-java'
+        
+        File resDir = sourceSets.main.resources.srcDirs[0]
+        resDir.mkdirs()
+//        println resDir.absolutePath
+        
+//        File dir = tasks['compileJava'].destinationDir
+        File propsFile = new File(resDir, 'buildData.properties')
+        propsFile.withWriter { w ->
+            buildData.store(w, "(C) Load-Impact, ${new Date().format('yyyy')}.")
+        }
+    }
+}
+
+assemble.dependsOn << 'saveBuildData'
+
 

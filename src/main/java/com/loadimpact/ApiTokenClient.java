@@ -44,14 +44,12 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonStructure;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.client.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -59,6 +57,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 /**
@@ -79,6 +78,8 @@ public class ApiTokenClient {
     private static final String TESTS                     = "tests";
     private static final String RESULTS                   = "results";
     private static final String ABORT                     = "abort";
+    private static final String BUILD_DATA                = "/buildData.properties";
+    private static final String AGENT_REQHDR              = "X-Load-Impact-Agent";
 
     @Deprecated
     private static List<String> HTTP_METHODS = Arrays.asList("GET", "POST", "HEAD", "PUT", "DELETE");  //excluded: OPTIONS, TRACE
@@ -86,6 +87,7 @@ public class ApiTokenClient {
     private final String    apiToken;
     private final Logger    log;
     private       WebTarget wsBase;
+    private       String    cachedAgentRequestHeaderValue;
 
     {   // Initialize the logger
         log = Logger.getLogger(this.getClass().getName());
@@ -108,6 +110,29 @@ public class ApiTokenClient {
         checkApiToken(apiToken);
         this.apiToken = apiToken;
         this.wsBase = configure(this.apiToken, false, this.log, 0);
+    }
+
+    public Properties getBuildData() {
+        Properties  buildData = new Properties();
+        InputStream is        = getClass().getResourceAsStream(BUILD_DATA);
+        if (is != null) {
+            try {
+                buildData.load(is);
+            } catch (IOException ignore) {
+            }
+        }
+        return buildData;
+    }
+
+    public String getVersion() {
+        return getBuildData().getProperty("version");
+    }
+
+    protected String getAgentRequestHeaderValue() {
+        if (cachedAgentRequestHeaderValue == null) {
+            cachedAgentRequestHeaderValue = String.format("LoadImpactJavaSDK/%s", getVersion());
+        }
+        return cachedAgentRequestHeaderValue;
     }
 
     /**
@@ -320,7 +345,7 @@ public class ApiTokenClient {
                                 throw new ResponseParseException("Expected JSON array with ID = '" + ids + "'");
                             }
                         }
-                        
+
                         Constructor<ResultType> resultConstructor = ObjectUtils.getConstructor(resultType, JsonObject.class);
                         List<ResultType>        results           = new ArrayList<ResultType>(jsonArray.size());
                         for (int k = 0; k < jsonArray.size(); ++k) {
@@ -402,6 +427,9 @@ public class ApiTokenClient {
             if (queryClosure != null) ws = queryClosure.modify(ws);
 
             Invocation.Builder request = ws.request(MediaType.APPLICATION_JSON_TYPE);
+
+            request.header(AGENT_REQHDR, getAgentRequestHeaderValue());
+
             JsonType json = requestClosure.call(request);
             return (responseClosure != null) ? responseClosure.call(json) : null;
         } catch (WebApplicationException e) {
