@@ -126,26 +126,23 @@ task saveBuildData {
 
     doLast {
         def buildData = [:] as Properties
-        buildData.name = project.name
-        buildData.group = project.group
+        buildData.name    = project.name
+        buildData.group   = project.group
         buildData.version = project.version
-        buildData.date = new Date().format('yyyy-MM-dd HH:mm:ss')
-        buildData.user = System.getProperty('user.name', 'gradle')
-        buildData.src = 'https://github.com/loadimpact/loadimpact-sdk-java'
-        buildData.web = 'https://github.com/loadimpact/loadimpact-sdk-java'
+        buildData.date    = new Date().format('yyyy-MM-dd HH:mm:ss')
+        buildData.user    = System.getProperty('user.name', 'gradle')
+        buildData.src     = 'https://github.com/loadimpact/loadimpact-sdk-java'
+        buildData.web     = 'http://developers.loadimpact.com/sdk/#li-docs-sdk-java'
         
-        File resDir = sourceSets.main.resources.srcDirs[0]
+        File resDir = file("$buildDir/resources/main")
         resDir.mkdirs()
-//        println resDir.absolutePath
         
-//        File dir = tasks['compileJava'].destinationDir
         File propsFile = new File(resDir, 'buildData.properties')
         propsFile.withWriter { w ->
-            buildData.store(w, "(C) Load-Impact, ${new Date().format('yyyy')}.")
+            buildData.store(w, "(C) Load-Impact, ${new Date().format('yyyy')}. https://loadimpact.com/")
         }
     }
 }
-
-assemble.dependsOn << 'saveBuildData'
+processResources.dependsOn << 'saveBuildData'
 
 

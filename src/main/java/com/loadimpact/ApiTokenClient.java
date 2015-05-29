@@ -125,7 +125,7 @@ public class ApiTokenClient {
     }
 
     public String getVersion() {
-        return getBuildData().getProperty("version");
+        return getBuildData().getProperty("version", "0.0.0");
     }
 
     protected String getAgentRequestHeaderValue() {
