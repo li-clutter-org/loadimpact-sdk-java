@@ -469,10 +469,8 @@ public class ApiTokenClient {
                     throw new ApiException(e);
             }
         } catch (ApiException e) {
-            e.printStackTrace();
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
             throw new ApiException(e);
         }
     }
@@ -778,7 +776,7 @@ public class ApiTokenClient {
      * Creates a new data store.
      *
      * @param file      CSV file that should be uploaded (N.B. max 50MB)
-     * @param name      name to use in the LoadImpact web-console
+     * @param name      name to use in the Load Impact web-console
      * @param fromline  Payload from this line (1st line is 1). Set to value 2, if the CSV file starts with a headings line
      * @param separator field separator, one of {@link com.loadimpact.resource.DataStore.Separator}
      * @param delimiter surround delimiter for text-strings, one of {@link com.loadimpact.resource.DataStore.StringDelimiter}

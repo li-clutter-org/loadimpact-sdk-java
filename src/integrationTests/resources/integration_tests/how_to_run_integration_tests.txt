@@ -1,6 +1,6 @@
 In order for the integration tests to run, it requires a valid API token to run. Follow these steps:
 
-(1) Create a LoadImpact account, unless you already have it.
+(1) Create a Load Impact account, unless you already have it.
 
 (2) Get the API token.
     (a) Open the user profile (click a username)

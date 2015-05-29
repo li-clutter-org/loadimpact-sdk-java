@@ -60,12 +60,12 @@ Gradle will generate a HTML test report in `./build/reports/tests/index.html`
 
 ## Run integration tests
 
-This SDK also has a suite of integration tests, which all need to logon to a valid LoadImpact account, given a
+This SDK also has a suite of integration tests, which all need to logon to a valid Load Impact account, given a
 valid API token. If you try running the integration tests without a proper API token, you will see the following message
 
     In order for the integration tests to run, it requires a valid API token to run. Follow these steps:
 
-    (1) Create a LoadImpact account, unless you already have it.
+    (1) Create a Load Impact account, unless you already have it.
     
     (2) Get the API token.
         (a) Open the user profile (click a username)
@@ -213,7 +213,7 @@ import com.loadimpact.resource.LoadZone;
 import java.util.List;
 
 public class App {
-    static String token = "your LoadImpact API token here";
+    static String token = "your Load Impact API token here";
 
     public static void main(String[] args) {
         ApiTokenClient client = new ApiTokenClient(token);        

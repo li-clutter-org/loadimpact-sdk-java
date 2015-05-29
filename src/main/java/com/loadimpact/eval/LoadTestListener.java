@@ -89,7 +89,7 @@ public class LoadTestListener implements RunningTestListener {
                 );
             }
         } else {
-            if (state != lastState) logger.message("Load-Test State: %s", state);
+            if (state != lastState) logger.message("Load test state: %s", state);
         }
 
         if (resultsUrl == null && StringUtils.startsWith(test.publicUrl, "http")) {
@@ -133,29 +133,29 @@ public class LoadTestListener implements RunningTestListener {
             }
 
             state = state.moveToNext(test.status, lastPercentage >= 100D);
-            if (state != lastState && !state.isCheckingThresholds()) logger.message("Load-Test State: %s", state);
+            if (state != lastState && !state.isCheckingThresholds()) logger.message("Load test state: %s", state);
         }
     }
 
     @Override
     public void onSuccess(Test test) {
-        logger.message("Load-Test Completed");
+        logger.message("Load test completed");
     }
 
     @Override
     public void onFailure(Test test) {
-        logger.failure("Load-Test Failed: " + test.status);
+        logger.failure("Load test failed: " + test.status);
     }
 
     @Override
     public void onAborted() {
-        logger.failure("Load-Test requested to be aborted");
+        logger.failure("Load test requested to be aborted");
         loadTestResultListener.stopBuild();
     }
 
     @Override
     public void onError(ApiException e) {
-        logger.failure("Load-Test Internal Error: " + e);
+        logger.failure("Load test internal error: " + e);
         loadTestResultListener.markAs(LoadTestResult.error, e.toString());
         loadTestResultListener.stopBuild();
     }
