@@ -46,7 +46,6 @@ import javax.json.JsonStructure;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
@@ -87,7 +86,7 @@ public class ApiTokenClient {
     private final String    apiToken;
     private final Logger    log;
     private       WebTarget wsBase;
-    private       String    cachedAgentRequestHeaderValue;
+    private       String    agentRequestHeaderValue;
 
     {   // Initialize the logger
         log = Logger.getLogger(this.getClass().getName());
@@ -129,10 +128,14 @@ public class ApiTokenClient {
     }
 
     protected String getAgentRequestHeaderValue() {
-        if (cachedAgentRequestHeaderValue == null) {
-            cachedAgentRequestHeaderValue = String.format("LoadImpactJavaSDK/%s", getVersion());
+        if (agentRequestHeaderValue == null) {
+            agentRequestHeaderValue = String.format("LoadImpactJavaSDK/%s", getVersion());
         }
-        return cachedAgentRequestHeaderValue;
+        return agentRequestHeaderValue;
+    }
+
+    public void setAgentRequestHeaderValue(String agentRequestHeaderValue) {
+        this.agentRequestHeaderValue = agentRequestHeaderValue;
     }
 
     /**
