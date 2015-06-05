@@ -31,18 +31,34 @@ public class ListUtils {
     }
 
 
+//    /**
+//     * Concatenates a list of strings using the given separator. 
+//     * @param lst           list of text strings
+//     * @param separator     separator
+//     * @return string
+//     */
+//    public static String join(Collection<String> lst, String separator) {
+//        StringBuilder buf = new StringBuilder(lst.size() * 64);
+//        boolean first = true;
+//        for (String value : lst) {
+//            if (first) first = false; else buf.append(separator);
+//            buf.append(value);
+//        }
+//        return buf.toString();
+//    }
+    
     /**
-     * Concatenates a list of strings using the given separator. 
+     * Concatenates a list of objects using the given separator. 
      * @param lst           list of text strings
      * @param separator     separator
      * @return string
      */
-    public static String join(Collection<String> lst, String separator) {
+    public static String join(Collection<? extends Object> lst, String separator) {
         StringBuilder buf = new StringBuilder(lst.size() * 64);
         boolean first = true;
-        for (String value : lst) {
+        for (Object value : lst) {
             if (first) first = false; else buf.append(separator);
-            buf.append(value);
+            buf.append(value.toString());
         }
         return buf.toString();
     }

@@ -12,13 +12,28 @@ import java.util.Date;
  * @author jens
  */
 public class DataStore implements Serializable {
-    public enum Status {QUEUED, CONVERTING, READY, FAILED}
+    public enum Status {
+        NONE(-1), QUEUED(0), CONVERTING(1), READY(2), FAILED(3);
+        
+        public final int id;
+
+        Status(int id) {
+            this.id = id;
+        }
+
+        public static Status from(int id) {
+            for (Status s : values()) {
+                if (id == s.id) return s;
+            }
+            return NONE;
+        }
+    }
 
     public enum Separator {
         COMMA, SEMICOLON, SPACE, TAB;
 
         public String param() {
-            return name();
+            return name().toLowerCase();
         }
     }
 
@@ -59,10 +74,10 @@ public class DataStore implements Serializable {
     public DataStore(JsonObject json) {
         this.id = json.getInt("id", 0);
         this.name = json.getString("name", null);
-        this.status = Status.values()[json.getInt("status", 0)];
+        this.status = Status.from(json.getInt("status", -1));
         this.rows = json.getInt("rows", 0);
-        this.created = DateUtils.toDateFromIso8601(json.getString("created"));
-        this.updated = DateUtils.toDateFromIso8601(json.getString("updated"));
+        this.created = DateUtils.toDateFromIso8601(json.getString("created", null));
+        this.updated = DateUtils.toDateFromIso8601(json.getString("updated", null));
     }
 
     @Override

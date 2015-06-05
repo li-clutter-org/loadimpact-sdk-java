@@ -31,7 +31,7 @@ import com.loadimpact.resource.testresult.StandardMetricResult;
 import com.loadimpact.resource.testresult.UrlMetricResult;
 import com.loadimpact.util.ObjectUtils;
 import com.loadimpact.util.StringUtils;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jsonp.JsonProcessingFeature;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -44,20 +44,19 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonStructure;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.client.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 /**
@@ -77,7 +76,9 @@ public class ApiTokenClient {
     private static final String USER_SCENARIO_VALIDATIONS = "user-scenario-validations";
     private static final String TESTS                     = "tests";
     private static final String RESULTS                   = "results";
-    private static final String ABORT = "abort";
+    private static final String ABORT                     = "abort";
+    private static final String BUILD_DATA                = "/buildData.properties";
+    private static final String AGENT_REQHDR              = "X-Load-Impact-Agent";
 
     @Deprecated
     private static List<String> HTTP_METHODS = Arrays.asList("GET", "POST", "HEAD", "PUT", "DELETE");  //excluded: OPTIONS, TRACE
@@ -85,6 +86,7 @@ public class ApiTokenClient {
     private final String    apiToken;
     private final Logger    log;
     private       WebTarget wsBase;
+    private       String    agentRequestHeaderValue;
 
     {   // Initialize the logger
         log = Logger.getLogger(this.getClass().getName());
@@ -101,8 +103,7 @@ public class ApiTokenClient {
     /**
      * Creates a client and initializes the REST client with the given API token.
      *
-     * @param apiToken
-     *         API token to use for authentication
+     * @param apiToken API token to use for authentication
      */
     public ApiTokenClient(String apiToken) {
         checkApiToken(apiToken);
@@ -110,66 +111,88 @@ public class ApiTokenClient {
         this.wsBase = configure(this.apiToken, false, this.log, 0);
     }
 
+    public Properties getBuildData() {
+        Properties  buildData = new Properties();
+        InputStream is        = getClass().getResourceAsStream(BUILD_DATA);
+        if (is != null) {
+            try {
+                buildData.load(is);
+            } catch (IOException ignore) {
+            }
+        }
+        return buildData;
+    }
+
+    public String getVersion() {
+        return getBuildData().getProperty("version", "0.0.0");
+    }
+
+    protected String getAgentRequestHeaderValue() {
+        if (agentRequestHeaderValue == null) {
+            agentRequestHeaderValue = String.format("LoadImpactJavaSDK/%s", getVersion());
+        }
+        return agentRequestHeaderValue;
+    }
+
+    public void setAgentRequestHeaderValue(String agentRequestHeaderValue) {
+        this.agentRequestHeaderValue = agentRequestHeaderValue;
+    }
+
     /**
      * Enables/disabled REQ/RES debug logging. This method re-configures the web-target, via {@link #configure(String,
      * boolean, java.util.logging.Logger, int)}.
      *
-     * @param debug
-     *         true for logging
+     * @param debug true for logging
      * @return itself (for chaining)
      */
     public ApiTokenClient setDebug(boolean debug) {
-        wsBase = configure(apiToken, debug, log, 1000);
-        return this;
+        return setDebug(debug, 10000);
     }
 
     /**
      * Enables REQ/RES debug logging. This method re-configures the web-target, via {@link #configure(String, boolean,
      * java.util.logging.Logger, int)}.
      *
-     * @param maxEntitySize
-     *         max number of chars for dumping the content of an entity (e.g. response body)
+     * @param debug         true for logging
+     * @param maxEntitySize max number of chars for dumping the content of an entity (e.g. response body)
      * @return itself (for chaining)
      */
-    public ApiTokenClient setDebug(int maxEntitySize) {
-        return setDebug(log, maxEntitySize);
+    public ApiTokenClient setDebug(boolean debug, int maxEntitySize) {
+        return setDebug(debug, maxEntitySize, log);
     }
 
     /**
      * Enables REQ/RES debug logging. This method re-configures the web-target, via {@link #configure(String, boolean,
      * java.util.logging.Logger, int)}.
      *
-     * @param log
-     *         non-standard log stream
-     * @param maxEntitySize
-     *         max number of chars for dumping the content of an entity (e.g. response body)
+     * @param debug         true for logging
+     * @param maxEntitySize max number of chars for dumping the content of an entity (e.g. response body)
+     * @param log           non-standard log stream
      * @return itself (for chaining)
      */
-    public ApiTokenClient setDebug(Logger log, int maxEntitySize) {
-        wsBase = configure(apiToken, true, log, maxEntitySize);
+    public ApiTokenClient setDebug(boolean debug, int maxEntitySize, Logger log) {
+        wsBase = configure(apiToken, debug, log, maxEntitySize);
         return this;
     }
 
     /**
      * Configures this client, by settings HTTP AUTH filter, the REST URL and logging.
      *
-     * @param token
-     *         its API Token
-     * @param debug
-     *         true for Jersey REQ/RES logging
-     * @param log
-     *         debug log stream (if debug==true)
-     * @param maxLog
-     *         max size of logged entity (if debug==true)
+     * @param token  its API Token
+     * @param debug  true for Jersey REQ/RES logging
+     * @param log    debug log stream (if debug==true)
+     * @param maxLog max size of logged entity (if debug==true)
      * @return configured REST URL target
      */
     private WebTarget configure(String token, boolean debug, Logger log, int maxLog) {
         Client client = ClientBuilder.newBuilder()
-                                     .register(MultiPartFeature.class)
-                                     .register(JsonProcessingFeature.class)
-                                     .build();
-        client.register(new HttpBasicAuthFilter(token, ""));
+                .register(MultiPartFeature.class)
+                .register(JsonProcessingFeature.class)
+                .build();
+
+        client.register(HttpAuthenticationFeature.basic(token, ""));
         if (debug) client.register(new LoggingFilter(log, maxLog));
+
         return client.target(baseUri);
     }
 
@@ -180,8 +203,7 @@ public class ApiTokenClient {
         /**
          * Intercepts right before requests processing starts.
          *
-         * @param webTarget
-         *         object to modify
+         * @param webTarget object to modify
          * @return modified object
          */
         WebTarget modify(WebTarget webTarget);
@@ -190,15 +212,13 @@ public class ApiTokenClient {
     /**
      * Invocation closure used to setup the request, such as GET, POST etc.
      *
-     * @param <JsonType>
-     *         type such as JsonObject, JsonArray, etc
+     * @param <JsonType> type such as JsonObject, JsonArray, etc
      */
     static interface RequestClosure<JsonType extends JsonStructure> {
         /**
          * Creates the request and returns the response entity type
          *
-         * @param request
-         *         the request object
+         * @param request the request object
          * @return response entity type
          */
         JsonType call(Invocation.Builder request);
@@ -207,18 +227,15 @@ public class ApiTokenClient {
     /**
      * Invocation closure used to process the response entity.
      *
-     * @param <JsonType>
-     *         response entity type (same as for {@link ApiTokenClient.RequestClosure#call(javax.ws.rs.client.Invocation.Builder)}
-     *         )
-     * @param <ValueType>
-     *         return type (classes from the <code>data</code> package)
+     * @param <JsonType>  response entity type (same as for {@link ApiTokenClient.RequestClosure#call(javax.ws.rs.client.Invocation.Builder)}
+     *                    )
+     * @param <ValueType> return type (classes from the <code>data</code> package)
      */
     static interface ResponseClosure<JsonType extends JsonStructure, ValueType> {
         /**
          * Converts the response JSON into a value-type (package <code>data</code>)
          *
-         * @param json
-         *         JSON type, such as JsonObject, JsonArray
+         * @param json JSON type, such as JsonObject, JsonArray
          * @return a value-type object or list of it
          */
         ValueType call(JsonType json);
@@ -237,31 +254,25 @@ public class ApiTokenClient {
         public String toString() {
             return String.format("|%d:%d", start, end);
         }
-        
-        public static OffsetRange mk(int start,int end) {
+
+        public static OffsetRange mk(int start, int end) {
             return new OffsetRange(start, end);
         }
     }
-    
+
     /**
      * Performs a REST API invocation. This is wrapper function for {@link #invoke(String, String, String,
      * ApiTokenClient.QueryClosure, ApiTokenClient.RequestClosure,
      * ApiTokenClient.ResponseClosure)}
      *
-     * @param operation
-     *         operation name, such as <code>tests</code>, <code>data-stores</code>, etc
-     * @param requestClosure
-     *         closure to create the request, such as GET, POST, PUT, DELETE
-     * @param responseClosure
-     *         closure to convert the response JSON into a value-object
-     * @param <JsonType>
-     *         JSON type, such as JsonObject, JsonArray
-     * @param <ValueType>
-     *         value-type, such as {@link com.loadimpact.resource.Test}, {@link
-     *         com.loadimpact.resource.UserScenario}, etc
+     * @param operation       operation name, such as <code>tests</code>, <code>data-stores</code>, etc
+     * @param requestClosure  closure to create the request, such as GET, POST, PUT, DELETE
+     * @param responseClosure closure to convert the response JSON into a value-object
+     * @param <JsonType>      JSON type, such as JsonObject, JsonArray
+     * @param <ValueType>     value-type, such as {@link com.loadimpact.resource.Test}, {@link
+     *                        com.loadimpact.resource.UserScenario}, etc
      * @return a single value-object or a list of it
-     * @throws com.loadimpact.exception.ApiException
-     *         if anything goes wrong, such as the server returns HTTP status not being 20x
+     * @throws com.loadimpact.exception.ApiException if anything goes wrong, such as the server returns HTTP status not being 20x
      */
     protected <JsonType extends JsonStructure, ValueType>
     ValueType invoke(String operation, RequestClosure<JsonType> requestClosure, ResponseClosure<JsonType, ValueType> responseClosure) {
@@ -273,22 +284,15 @@ public class ApiTokenClient {
      * ApiTokenClient.QueryClosure, ApiTokenClient.RequestClosure,
      * ApiTokenClient.ResponseClosure)}
      *
-     * @param operation
-     *         operation name, such as <code>tests</code>, <code>data-stores</code>, etc
-     * @param id
-     *         resource ID (if fetching a specific resource)
-     * @param requestClosure
-     *         closure to create the request, such as GET, POST, PUT, DELETE
-     * @param responseClosure
-     *         closure to convert the response JSON into a value-object
-     * @param <JsonType>
-     *         JSON type, such as JsonObject, JsonArray
-     * @param <ValueType>
-     *         value-type, such as {@link com.loadimpact.resource.Test}, {@link
-     *         com.loadimpact.resource.UserScenario}, etc
+     * @param operation       operation name, such as <code>tests</code>, <code>data-stores</code>, etc
+     * @param id              resource ID (if fetching a specific resource)
+     * @param requestClosure  closure to create the request, such as GET, POST, PUT, DELETE
+     * @param responseClosure closure to convert the response JSON into a value-object
+     * @param <JsonType>      JSON type, such as JsonObject, JsonArray
+     * @param <ValueType>     value-type, such as {@link com.loadimpact.resource.Test}, {@link
+     *                        com.loadimpact.resource.UserScenario}, etc
      * @return a single value-object or a list of it
-     * @throws com.loadimpact.exception.ApiException
-     *         if anything goes wrong, such as the server returns HTTP status not being 20x
+     * @throws com.loadimpact.exception.ApiException if anything goes wrong, such as the server returns HTTP status not being 20x
      */
     protected <JsonType extends JsonStructure, ValueType>
     ValueType invoke(String operation, int id, RequestClosure<JsonType> requestClosure, ResponseClosure<JsonType, ValueType> responseClosure) {
@@ -300,24 +304,16 @@ public class ApiTokenClient {
      * ApiTokenClient.QueryClosure, ApiTokenClient.RequestClosure,
      * ApiTokenClient.ResponseClosure)}
      *
-     * @param operation
-     *         operation name, such as <code>tests</code>, <code>data-stores</code>, etc
-     * @param id
-     *         resource ID (if fetching a specific resource)
-     * @param action
-     *         optional action, such as <code>clone</code>, <code>abort</code>, etc
-     * @param requestClosure
-     *         closure to create the request, such as GET, POST, PUT, DELETE
-     * @param responseClosure
-     *         closure to convert the response JSON into a value-object
-     * @param <JsonType>
-     *         JSON type, such as JsonObject, JsonArray
-     * @param <ValueType>
-     *         value-type, such as {@link com.loadimpact.resource.Test}, {@link
-     *         com.loadimpact.resource.UserScenario}, etc
+     * @param operation       operation name, such as <code>tests</code>, <code>data-stores</code>, etc
+     * @param id              resource ID (if fetching a specific resource)
+     * @param action          optional action, such as <code>clone</code>, <code>abort</code>, etc
+     * @param requestClosure  closure to create the request, such as GET, POST, PUT, DELETE
+     * @param responseClosure closure to convert the response JSON into a value-object
+     * @param <JsonType>      JSON type, such as JsonObject, JsonArray
+     * @param <ValueType>     value-type, such as {@link com.loadimpact.resource.Test}, {@link
+     *                        com.loadimpact.resource.UserScenario}, etc
      * @return a single value-object or a list of it
-     * @throws com.loadimpact.exception.ApiException
-     *         if anything goes wrong, such as the server returns HTTP status not being 20x
+     * @throws com.loadimpact.exception.ApiException if anything goes wrong, such as the server returns HTTP status not being 20x
      */
     protected <JsonType extends JsonStructure, ValueType>
     ValueType invoke(String operation, int id, String action, RequestClosure<JsonType> requestClosure, ResponseClosure<JsonType, ValueType> responseClosure) {
@@ -343,10 +339,18 @@ public class ApiTokenClient {
                     @Override
                     public List<ResultType> call(JsonObject json) {
                         JsonArray jsonArray = json.getJsonArray(ids);
-                        if (jsonArray == null) throw new ResponseParseException("Expected JSON array '" + ids + "'");
+//                        if (jsonArray == null) throw new ResponseParseException("Expected JSON array '" + ids + "'");
+                        if (jsonArray == null) {
+                            String[] parts = ids.split(":");
+                            String metricId = parts[0];
+                            jsonArray = json.getJsonArray(metricId);
+                            if (jsonArray == null) {
+                                throw new ResponseParseException("Expected JSON array with ID = '" + ids + "'");
+                            }
+                        }
 
                         Constructor<ResultType> resultConstructor = ObjectUtils.getConstructor(resultType, JsonObject.class);
-                        List<ResultType> results = new ArrayList<ResultType>(jsonArray.size());
+                        List<ResultType>        results           = new ArrayList<ResultType>(jsonArray.size());
                         for (int k = 0; k < jsonArray.size(); ++k) {
                             JsonObject jsonObject = jsonArray.getJsonObject(k);
                             ResultType result = ObjectUtils.newInstance(resultConstructor, jsonObject);
@@ -357,7 +361,7 @@ public class ApiTokenClient {
                 }
         );
     }
-    
+
     @SuppressWarnings("unchecked")
     protected <JsonType extends JsonStructure, ResultType>
     List<? extends StandardMetricResult> invokeForResults(int testId, final String ids, final OffsetRange range, final StandardMetricResult.Metrics metric) {
@@ -378,10 +382,17 @@ public class ApiTokenClient {
                     @Override
                     public List<? extends StandardMetricResult> call(JsonObject json) {
                         JsonArray jsonArray = json.getJsonArray(ids);
-                        if (jsonArray == null) throw new ResponseParseException("Expected JSON array '" + ids + "'");
+                        if (jsonArray == null) {
+                            String[] parts = ids.split(":");
+                            String metricId = parts[0];
+                            jsonArray = json.getJsonArray(metricId);
+                            if (jsonArray == null) {
+                                throw new ResponseParseException("Expected JSON array with ID = '" + ids + "'");
+                            }
+                        }
 
                         Constructor<? extends StandardMetricResult> resultConstructor = ObjectUtils.getConstructor(metric.resultType, StandardMetricResult.Metrics.class, JsonObject.class);
-                        
+
                         List<StandardMetricResult> results = new ArrayList<StandardMetricResult>(jsonArray.size());
                         for (int k = 0; k < jsonArray.size(); ++k) {
                             JsonObject jsonObject = jsonArray.getJsonObject(k);
@@ -393,31 +404,22 @@ public class ApiTokenClient {
                 }
         );
     }
-    
+
 
     /**
      * Performs a REST API invocation.
      *
-     * @param operation
-     *         operation name, such as <code>tests</code>, <code>data-stores</code>, etc
-     * @param id
-     *         resource ID (if fetching a specific resource)
-     * @param action
-     *         optional action, such as <code>clone</code>, <code>abort</code>, etc
-     * @param queryClosure
-     *         optional closure to modify the web-target before requests processing
-     * @param requestClosure
-     *         closure to create the request, such as GET, POST, PUT, DELETE
-     * @param responseClosure
-     *         closure to convert the response JSON into a value-object
-     * @param <JsonType>
-     *         JSON type, such as JsonObject, JsonArray
-     * @param <ValueType>
-     *         value-type, such as {@link com.loadimpact.resource.Test}, {@link
-     *         com.loadimpact.resource.UserScenario}, etc
+     * @param operation       operation name, such as <code>tests</code>, <code>data-stores</code>, etc
+     * @param id              resource ID (if fetching a specific resource)
+     * @param action          optional action, such as <code>clone</code>, <code>abort</code>, etc
+     * @param queryClosure    optional closure to modify the web-target before requests processing
+     * @param requestClosure  closure to create the request, such as GET, POST, PUT, DELETE
+     * @param responseClosure closure to convert the response JSON into a value-object
+     * @param <JsonType>      JSON type, such as JsonObject, JsonArray
+     * @param <ValueType>     value-type, such as {@link com.loadimpact.resource.Test}, {@link
+     *                        com.loadimpact.resource.UserScenario}, etc
      * @return a single value-object or a list of it
-     * @throws com.loadimpact.exception.ApiException
-     *         if anything goes wrong, such as the server returns HTTP status not being 20x
+     * @throws com.loadimpact.exception.ApiException if anything goes wrong, such as the server returns HTTP status not being 20x
      */
     protected <JsonType extends JsonStructure, ValueType>
     ValueType invoke(String operation, String id, String action, QueryClosure queryClosure, RequestClosure<JsonType> requestClosure, ResponseClosure<JsonType, ValueType> responseClosure) {
@@ -428,28 +430,44 @@ public class ApiTokenClient {
             if (queryClosure != null) ws = queryClosure.modify(ws);
 
             Invocation.Builder request = ws.request(MediaType.APPLICATION_JSON_TYPE);
+
+            request.header(AGENT_REQHDR, getAgentRequestHeaderValue());
+
             JsonType json = requestClosure.call(request);
             return (responseClosure != null) ? responseClosure.call(json) : null;
         } catch (WebApplicationException e) {
-            switch (e.getResponse().getStatus()) {
+            Response.StatusType status = e.getResponse().getStatusInfo();
+            switch (status.getStatusCode()) {
                 case 400:
-                    throw new BadRequestException(operation,id,action,e);
+                    throw new BadRequestException(operation, id, action, e);
                 case 401:
-                    throw new MissingApiTokenException();
+                    throw new MissingApiTokenException(status.getReasonPhrase());
                 case 403:
-                    throw new UnauthorizedException(operation,id,action);
+                    throw new UnauthorizedException(operation, id, action);
                 case 404:
-                    throw new NotFoundException(operation,id);
+                    throw new NotFoundException(operation, id);
                 case 409:
-                    throw new ConflictException(operation,id,action,e);
+                    throw new ConflictException(operation, id, action, e);
                 case 422:
-                    throw new CoercionException(operation,id,action,e);
+                    throw new CoercionException(operation, id, action, e);
                 case 427:
-                    throw new RateLimitedException(operation,id,action);
+                    throw new RateLimitedException(operation, id, action);
                 case 429:
-                    throw new ResponseParseException(operation,id,action,e);
-                case 500:
-                    throw new ServerException(e);
+                    throw new ResponseParseException(operation, id, action, e);
+                case 500: {
+                    String message = "";
+                    Response response = e.getResponse();
+                    String contentType = response.getHeaderString("Content-Type");
+                    if (contentType.equals("application/json")) {
+                        InputStream is = (InputStream) response.getEntity();
+                        JsonObject errJson = Json.createReader(is).readObject();
+                        message = errJson.getString("message");
+                    } else if (contentType.startsWith("text/html")) {
+                        InputStream is = (InputStream) response.getEntity();
+                        message = StringUtils.toString(is);
+                    }
+                    throw new ServerException(status.getReasonPhrase() + ": " + message);
+                }
                 default:
                     throw new ApiException(e);
             }
@@ -463,10 +481,8 @@ public class ApiTokenClient {
     /**
      * Syntax checks the API Token.
      *
-     * @param apiToken
-     *         value to check
-     * @throws IllegalArgumentException
-     *         if invalid
+     * @param apiToken value to check
+     * @throws IllegalArgumentException if invalid
      */
     protected void checkApiToken(String apiToken) {
         if (StringUtils.isBlank(apiToken)) throw new MissingApiTokenException("Empty key");
@@ -475,14 +491,17 @@ public class ApiTokenClient {
     }
 
     /**
-     * Returns true if we can successfully logon and fetch some test configs.
+     * Returns true if we can successfully logon and fetch some data.
      *
      * @return true     if can logon
      */
     public boolean isValidToken() {
         try {
-            Response response = wsBase.path(TEST_CONFIGS).request(MediaType.APPLICATION_JSON_TYPE).get();
-            return response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL;
+//            Response response = wsBase.path(TEST_CONFIGS).request(MediaType.APPLICATION_JSON_TYPE).get();
+//            return response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL;
+
+            LoadZone zone = getLoadZone(LoadZone.AMAZON_US_ASHBURN.uid);
+            return zone == LoadZone.AMAZON_US_ASHBURN;
         } catch (Exception e) {
             log.info("API token validation failed: " + e);
         }
@@ -492,8 +511,7 @@ public class ApiTokenClient {
     /**
      * Retrieves a single test configuration
      *
-     * @param id
-     *         test configuration     its id
+     * @param id test configuration     its id
      * @return {@link com.loadimpact.resource.TestConfiguration}
      */
     public TestConfiguration getTestConfiguration(int id) {
@@ -542,10 +560,8 @@ public class ApiTokenClient {
     /**
      * Makes a copy of an existing test configuration.
      *
-     * @param id
-     *         id of the config
-     * @param name
-     *         its new name
+     * @param id   id of the config
+     * @param name its new name
      * @return {@link com.loadimpact.resource.TestConfiguration}
      */
     public TestConfiguration cloneTestConfiguration(int id, final String name) {
@@ -553,7 +569,7 @@ public class ApiTokenClient {
                 new RequestClosure<JsonObject>() {
                     @Override
                     public JsonObject call(Invocation.Builder request) {
-                        String json = Json.createObjectBuilder().add("name", name).build().toString();
+                        String         json = Json.createObjectBuilder().add("name", name).build().toString();
                         Entity<String> data = Entity.entity(json, MediaType.APPLICATION_JSON_TYPE);
                         return request.post(data, JsonObject.class);
                     }
@@ -570,10 +586,8 @@ public class ApiTokenClient {
     /**
      * Deletes a test configuration.
      *
-     * @param id
-     *         its id
-     * @throws com.loadimpact.exception.NotFoundException
-     *         if it was unsuccessful
+     * @param id its id
+     * @throws com.loadimpact.exception.NotFoundException if it was unsuccessful
      */
     public void deleteTestConfiguration(final int id) {
         invoke(TEST_CONFIGS, id,
@@ -594,8 +608,7 @@ public class ApiTokenClient {
     /**
      * Updates an existing test configuration.
      *
-     * @param testConfiguration
-     *         a test configuration object
+     * @param testConfiguration a test configuration object
      * @return {@link com.loadimpact.resource.TestConfiguration} stored at the server
      */
     public TestConfiguration updateTestConfiguration(final TestConfiguration testConfiguration) {
@@ -603,7 +616,7 @@ public class ApiTokenClient {
                 new RequestClosure<JsonObject>() {
                     @Override
                     public JsonObject call(Invocation.Builder request) {
-                        String json = testConfiguration.toJSON().toString();
+                        String         json = testConfiguration.toJSON().toString();
                         Entity<String> data = Entity.entity(json, MediaType.APPLICATION_JSON_TYPE);
                         return request.put(data, JsonObject.class);
                     }
@@ -620,8 +633,7 @@ public class ApiTokenClient {
     /**
      * Creates a new test configuration.
      *
-     * @param testConfiguration
-     *         a prepared test configuration object (with no ID)
+     * @param testConfiguration a prepared test configuration object (with no ID)
      * @return {@link com.loadimpact.resource.TestConfiguration} stored at the server
      */
     public TestConfiguration createTestConfiguration(final TestConfiguration testConfiguration) {
@@ -629,7 +641,7 @@ public class ApiTokenClient {
                 new RequestClosure<JsonObject>() {
                     @Override
                     public JsonObject call(Invocation.Builder request) {
-                        String json = testConfiguration.toJSON().toString();
+                        String         json = testConfiguration.toJSON().toString();
                         Entity<String> data = Entity.entity(json, MediaType.APPLICATION_JSON_TYPE);
                         return request.post(data, JsonObject.class);
                     }
@@ -646,8 +658,7 @@ public class ApiTokenClient {
     /**
      * Retrieves a load-zone.
      *
-     * @param id
-     *         its id
+     * @param id its id
      * @return {@link com.loadimpact.resource.LoadZone}
      */
     public LoadZone getLoadZone(String id) {
@@ -696,8 +707,7 @@ public class ApiTokenClient {
     /**
      * Retrieves a data store.
      *
-     * @param id
-     *         ist id
+     * @param id ist id
      * @return {@link com.loadimpact.resource.DataStore}
      */
     public DataStore getDataStore(int id) {
@@ -746,10 +756,8 @@ public class ApiTokenClient {
     /**
      * Deletes a data store.
      *
-     * @param id
-     *         its id
-     * @throws com.loadimpact.exception.ResponseParseException
-     *         if it was unsuccessful
+     * @param id its id
+     * @throws com.loadimpact.exception.ResponseParseException if it was unsuccessful
      */
     public void deleteDataStore(final int id) {
         invoke(DATA_STORES, id,
@@ -770,16 +778,11 @@ public class ApiTokenClient {
     /**
      * Creates a new data store.
      *
-     * @param file
-     *         CSV file that should be uploaded (N.B. max 50MB)
-     * @param name
-     *         name to use in the LoadImpact web-console
-     * @param fromline
-     *         Payload from this line (1st line is 1). Set to value 2, if the CSV file starts with a headings line
-     * @param separator
-     *         field separator, one of {@link com.loadimpact.resource.DataStore.Separator}
-     * @param delimiter
-     *         surround delimiter for text-strings, one of {@link com.loadimpact.resource.DataStore.StringDelimiter}
+     * @param file      CSV file that should be uploaded (N.B. max 50MB)
+     * @param name      name to use in the Load Impact web-console
+     * @param fromline  Payload from this line (1st line is 1). Set to value 2, if the CSV file starts with a headings line
+     * @param separator field separator, one of {@link com.loadimpact.resource.DataStore.Separator}
+     * @param delimiter surround delimiter for text-strings, one of {@link com.loadimpact.resource.DataStore.StringDelimiter}
      * @return {@link com.loadimpact.resource.DataStore}
      */
     public DataStore createDataStore(final File file, final String name, final int fromline, final DataStore.Separator separator, final DataStore.StringDelimiter delimiter) {
@@ -809,8 +812,7 @@ public class ApiTokenClient {
     /**
      * Retrieves a user scenario.
      *
-     * @param id
-     *         its id
+     * @param id its id
      * @return {@link com.loadimpact.resource.UserScenario}
      */
     public UserScenario getUserScenario(int id) {
@@ -859,10 +861,8 @@ public class ApiTokenClient {
     /**
      * Makes a copy of a user scenario.
      *
-     * @param id
-     *         its id
-     * @param name
-     *         new name of the copy
+     * @param id   its id
+     * @param name new name of the copy
      * @return {@link com.loadimpact.resource.UserScenario}
      */
     public UserScenario cloneUserScenario(int id, final String name) {
@@ -870,7 +870,7 @@ public class ApiTokenClient {
                 new RequestClosure<JsonObject>() {
                     @Override
                     public JsonObject call(Invocation.Builder request) {
-                        String json = Json.createObjectBuilder().add("name", name).build().toString();
+                        String         json = Json.createObjectBuilder().add("name", name).build().toString();
                         Entity<String> data = Entity.entity(json, MediaType.APPLICATION_JSON_TYPE);
                         return request.post(data, JsonObject.class);
                     }
@@ -887,10 +887,8 @@ public class ApiTokenClient {
     /**
      * Deletes a user scenario.
      *
-     * @param id
-     *         its id
-     * @throws com.loadimpact.exception.ResponseParseException
-     *         if unsuccessful
+     * @param id its id
+     * @throws com.loadimpact.exception.ResponseParseException if unsuccessful
      */
     public void deleteUserScenario(final int id) {
         invoke(USER_SCENARIOS, id,
@@ -911,8 +909,7 @@ public class ApiTokenClient {
     /**
      * Updates a user scenario.
      *
-     * @param scenario
-     *         modified scenario
+     * @param scenario modified scenario
      * @return server stored {@link com.loadimpact.resource.UserScenario}
      */
     public UserScenario updateUserScenario(final UserScenario scenario) {
@@ -920,7 +917,7 @@ public class ApiTokenClient {
                 new RequestClosure<JsonObject>() {
                     @Override
                     public JsonObject call(Invocation.Builder request) {
-                        String json = scenario.toJSON().toString();
+                        String         json = scenario.toJSON().toString();
                         Entity<String> data = Entity.entity(json, MediaType.APPLICATION_JSON_TYPE);
                         return request.put(data, JsonObject.class);
                     }
@@ -937,8 +934,7 @@ public class ApiTokenClient {
     /**
      * Creates a new user scenario.
      *
-     * @param scenario
-     *         scenario configuration (no ID)
+     * @param scenario scenario configuration (no ID)
      * @return server stored {@link com.loadimpact.resource.UserScenario}
      */
     public UserScenario createUserScenario(final UserScenario scenario) {
@@ -946,7 +942,7 @@ public class ApiTokenClient {
                 new RequestClosure<JsonObject>() {
                     @Override
                     public JsonObject call(Invocation.Builder request) {
-                        String json = scenario.toJSON().toString();
+                        String         json = scenario.toJSON().toString();
                         Entity<String> data = Entity.entity(json, MediaType.APPLICATION_JSON_TYPE);
                         return request.post(data, JsonObject.class);
                     }
@@ -963,8 +959,7 @@ public class ApiTokenClient {
     /**
      * Creates (starts) a user scenario validation.
      *
-     * @param scenarioId
-     *         id of the scenario that should be validated
+     * @param scenarioId id of the scenario that should be validated
      * @return {@link com.loadimpact.resource.UserScenarioValidation}
      */
     public UserScenarioValidation createUserScenarioValidation(final int scenarioId) {
@@ -972,7 +967,7 @@ public class ApiTokenClient {
                 new RequestClosure<JsonObject>() {
                     @Override
                     public JsonObject call(Invocation.Builder request) {
-                        JsonObject json = Json.createObjectBuilder().add("user_scenario_id", scenarioId).build();
+                        JsonObject     json = Json.createObjectBuilder().add("user_scenario_id", scenarioId).build();
                         Entity<String> data = Entity.entity(json.toString(), MediaType.APPLICATION_JSON_TYPE);
                         return request.post(data, JsonObject.class);
                     }
@@ -989,8 +984,7 @@ public class ApiTokenClient {
     /**
      * Retrieves a user scenario validation.
      *
-     * @param id
-     *         its id
+     * @param id its id
      * @return {@link com.loadimpact.resource.UserScenarioValidation}
      */
     public UserScenarioValidation getUserScenarioValidation(int id) {
@@ -1014,8 +1008,7 @@ public class ApiTokenClient {
      * Retrieves the results of a scenario validation and populates the list {@link
      * com.loadimpact.resource.UserScenarioValidation#results}
      *
-     * @param scenarioValidation
-     *         validation object
+     * @param scenarioValidation validation object
      * @return the same validation object as passed in, but augmented with the results
      */
     public UserScenarioValidation getUserScenarioValidationResults(final UserScenarioValidation scenarioValidation) {
@@ -1047,8 +1040,7 @@ public class ApiTokenClient {
     /**
      * Retrieves a test (instance).
      *
-     * @param id
-     *         its id
+     * @param id its id
      * @return {@link com.loadimpact.resource.Test}
      */
     public Test getTest(int id) {
@@ -1098,8 +1090,7 @@ public class ApiTokenClient {
     /**
      * Starts a test.
      *
-     * @param testConfigId
-     *         id of the test configuration
+     * @param testConfigId id of the test configuration
      * @return test-instance ID for the just created load test
      */
     public int startTest(int testConfigId) {
@@ -1122,10 +1113,8 @@ public class ApiTokenClient {
     /**
      * Aborts a running test.
      *
-     * @param testId
-     *         its id
-     * @throws com.loadimpact.exception.ResponseParseException
-     *         if unsuccessful
+     * @param testId its id
+     * @throws com.loadimpact.exception.ResponseParseException if unsuccessful
      */
     public void abortTest(final int testId) {
         invoke(TESTS, testId, ABORT,
@@ -1147,12 +1136,9 @@ public class ApiTokenClient {
      * Polls a running test for status updates using the given listener. This method blocks until the test has completed
      * and periodically retrieves status info using {@link #getTest(int)}
      *
-     * @param testId
-     *         test ID
-     * @param pollInterval
-     *         length of poll interval, in seconds
-     * @param listener
-     *         a {@link RunningTestListener} object
+     * @param testId       test ID
+     * @param pollInterval length of poll interval, in seconds
+     * @param listener     a {@link RunningTestListener} object
      * @return the last retrieved test-instance object, or null if something went wrong
      * @see RunningTestListener
      * @see com.loadimpact.exception.AbortTest
@@ -1193,7 +1179,6 @@ public class ApiTokenClient {
         return null;
     }
 
-    
 
     public List<UrlMetricResult> getUrlMetricResults(int testId, URL url, LoadZone zone, Integer scenarioId, Integer httpStatus, HttpMethods httpMethod, final OffsetRange range) {
         if (url == null) throw new IllegalArgumentException("Missing url");
@@ -1206,7 +1191,7 @@ public class ApiTokenClient {
         return invokeForResults(testId, ids, range, UrlMetricResult.class);
     }
 
-    
+
     public List<PageMetricResult> getPageMetricResults(int testId, String pageName, LoadZone zone, Integer scenarioId, OffsetRange range) {
         if (pageName == null) throw new IllegalArgumentException("Missing pageName");
         if (zone == null) zone = LoadZone.AGGREGATE_WORLD;
@@ -1215,7 +1200,7 @@ public class ApiTokenClient {
         String ids = String.format("%s%s:%d:%d", PageMetricResult.METRIC_ID_PREFIX, StringUtils.md5(pageName), zone.id, scenarioId);
         return invokeForResults(testId, ids, range, PageMetricResult.class);
     }
-    
+
     public List<CustomMetricResult> getCustomMetricResults(int testId, String metricName, LoadZone zone, Integer scenarioId, OffsetRange range) {
         if (metricName == null) throw new IllegalArgumentException("Missing metricName");
         if (zone == null) zone = LoadZone.AGGREGATE_WORLD;
@@ -1232,10 +1217,10 @@ public class ApiTokenClient {
         String ids = String.format("%s%s", ServerMetricResult.METRIC_ID_PREFIX, StringUtils.md5(agentName + metricName));
         return invokeForResults(testId, ids, range, ServerMetricResult.class);
     }
-    
-    public List<? extends StandardMetricResult> getStandardMetricResults(int testId, StandardMetricResult.Metrics metric, LoadZone zone, OffsetRange range ) {
-        if (metric==null) throw new IllegalArgumentException("Missing metric");
-        if (zone==null) zone = LoadZone.AGGREGATE_WORLD;
+
+    public List<? extends StandardMetricResult> getStandardMetricResults(int testId, StandardMetricResult.Metrics metric, LoadZone zone, OffsetRange range) {
+        if (metric == null) throw new IllegalArgumentException("Missing metric");
+        if (zone == null) zone = LoadZone.AGGREGATE_WORLD;
 
         String ids = String.format("%s:%d", metric.id, zone.id);
         return invokeForResults(testId, ids, range, metric);

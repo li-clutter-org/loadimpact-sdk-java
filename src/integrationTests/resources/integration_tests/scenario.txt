@@ -1,0 +1,10 @@
+http.page_start("Page 1")
+http.request_batch({
+    {"GET", "https://loadimpact.com/"},
+})
+http.request_batch({
+    {"GET", "https://loadimpact.com/static/images/loader.gif"},
+})
+http.page_end("Page 1")
+
+client.sleep(math.random(20, 40))

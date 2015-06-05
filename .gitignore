@@ -2,7 +2,11 @@
 
 # Output dirs #
 target/
+build/
 
 # Project stuff
 .idea/
 *.iml
+.gradle/
+ISSUES*
+

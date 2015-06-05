@@ -18,7 +18,7 @@
 
               int offset = 0;
               while (test.status.isInProgress()) {
-                  List<StandardMetricResult> results = client.getStandardMetricResults(
+                  List&lt;StandardMetricResult> results = client.getStandardMetricResults(
                       test.id, StandardMetricResult.Metrics.REQUESTS_PER_SECOND, LoadZone.AMAZON_US_PALOALTO,
                       ApiTokenClient.OffsetRange.mk(offset, offset + 100));
 

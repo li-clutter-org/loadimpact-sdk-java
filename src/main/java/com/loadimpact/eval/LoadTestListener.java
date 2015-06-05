@@ -25,13 +25,13 @@ import static com.loadimpact.resource.testresult.StandardMetricResult.Metrics;
 public class LoadTestListener implements RunningTestListener {
     private final Debug                  debug;
     private final LoadTestLogger         logger;
-    private final LoadTestParameters             params;
+    private final LoadTestParameters     params;
     private       LoadTestState          state;
     private       int                    totalTimeMinutes;
     private       Long                   startTime;
     private       Double                 lastPercentage;
     private       URL                    resultsUrl;
-    private final Threshold[]        thresholds;
+    private final Threshold[]            thresholds;
     private final LoadTestResultListener loadTestResultListener;
 
 
@@ -76,25 +76,26 @@ public class LoadTestListener implements RunningTestListener {
 
         LoadTestState lastState = state;
         state = state.moveToNext(test.status);
+//        System.out.printf("**** state: %s --> %s %n", lastState.toString(), state.toString());
         if (state.isActive()) {
             if (startTime == null) startTime = now();
 
             Double percentage = getProgressPercentage(test, client);
             if (percentage != null && lastPercentage < percentage) {
                 lastPercentage = percentage;
-                logger.message(String.format("Running: %s (~ %.1f minutes remaining)",
+                logger.message("Running: %s (~ %.1f minutes remaining)",
                         StringUtils.percentageBar(percentage),
                         totalTimeMinutes * (100D - percentage) / 100D
-                ));
+                );
             }
         } else {
-            if (state != lastState) logger.message("Load Test State: " + state);
+            if (state != lastState) logger.message("Load test state: %s", state);
         }
 
         if (resultsUrl == null && StringUtils.startsWith(test.publicUrl, "http")) {
             resultsUrl = test.publicUrl;
-            logger.message(String.format("Start sending load traffic [%d] %s", test.id, test.title));
-            logger.message("Follow the test progress at " + test.publicUrl);
+            logger.message("Start sending load traffic [%d] %s", test.id, test.title);
+            logger.message("Follow the test progress at URL %s", test.publicUrl);
         }
 
         if (state.isBeforeCheckingThresholds()) {
@@ -112,7 +113,7 @@ public class LoadTestListener implements RunningTestListener {
                 reason = String.format("Passed %d users (current=%d users)", delayValue, usersCount);
             }
 
-            if (state.isCheckingThresholds()) logger.message("Start checking thresholds: " + reason);
+            if (state.isCheckingThresholds()) logger.message("Start checking thresholds: %s", reason);
         }
 
         if (state.isCheckingThresholds()) {
@@ -132,29 +133,29 @@ public class LoadTestListener implements RunningTestListener {
             }
 
             state = state.moveToNext(test.status, lastPercentage >= 100D);
-            if (state != lastState && !state.isCheckingThresholds()) logger.message("Load Test State: " + state);
+            if (state != lastState && !state.isCheckingThresholds()) logger.message("Load test state: %s", state);
         }
     }
 
     @Override
     public void onSuccess(Test test) {
-        logger.message("Load Test Completed");
+        logger.message("Load test completed");
     }
 
     @Override
     public void onFailure(Test test) {
-        logger.failure("Load Test Failed: " + test.status);
+        logger.failure("Load test failed: " + test.status);
     }
 
     @Override
     public void onAborted() {
-        logger.failure("Load Test requested to be aborted");
+        logger.failure("Load test requested to be aborted");
         loadTestResultListener.stopBuild();
     }
 
     @Override
     public void onError(ApiException e) {
-        logger.failure("Load Test Internal Error: " + e);
+        logger.failure("Load test internal error: " + e);
         loadTestResultListener.markAs(LoadTestResult.error, e.toString());
         loadTestResultListener.stopBuild();
     }

@@ -18,19 +18,11 @@ import static org.junit.Assert.assertThat;
  * @author jens
  */
 public class ApiTokenClient_UnitTest {
-    protected String         apiToken;
-    protected ApiTokenClient client;
+    protected final String      apiToken = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
+    protected ApiTokenClient    client;
 
     @Before
     public void init() throws Exception {
-        InputStream is = getClass().getResourceAsStream("/api-token.properties");
-        assertThat("Cannot find a resource file containing the API Token", is, notNullValue());
-
-        Properties p = new Properties();
-        p.load(is);
-        apiToken = p.getProperty("api.token");
-        assertThat(apiToken, notNullValue());
-
         client = new ApiTokenClient();
     }
 
@@ -59,8 +51,4 @@ public class ApiTokenClient_UnitTest {
         client.checkApiToken(apiToken.replaceAll("[0-9]", "X"));
     }
 
-
-    
-    
-    
 }

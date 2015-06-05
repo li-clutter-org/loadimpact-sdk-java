@@ -15,6 +15,7 @@ import static org.junit.Assert.assertThat;
  *
  * @author jens
  */
+@SuppressWarnings("unchecked")
 public class ListUtilsTest {
 
     @Test

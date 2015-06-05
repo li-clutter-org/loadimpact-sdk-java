@@ -2,6 +2,7 @@ package com.loadimpact.resource;
 
 import com.loadimpact.resource.Status;
 import com.loadimpact.util.DateUtils;
+import com.loadimpact.util.StringUtils;
 
 import javax.json.JsonObject;
 import java.io.Serializable;
@@ -38,18 +39,18 @@ public class Test implements Serializable {
     public Test(JsonObject json) {
         this.id = json.getInt("id", 0);
         this.title = json.getString("title", null);
-        this.status = Status.valueOf(json.getInt("status", 0));
+        this.status = Status.valueOf(json.getInt("status", -1));
         this.started = DateUtils.toDateFromIso8601(json.getString("started", null));
         this.ended = DateUtils.toDateFromIso8601(json.getString("ended", null));
 
         try {
             String u = json.getString("url", null);
-            this.url = (u != null) ? new URL(u) : null;
+            this.url = !StringUtils.isBlank(u) ? new URL(u) : null;
         } catch (MalformedURLException e) { throw new RuntimeException(e); }
 
         try {
             String u = json.getString("public_url", null);
-            this.publicUrl = (u != null) ? new URL(u) : null;
+            this.publicUrl = !StringUtils.isBlank(u) ? new URL(u) : null;
         } catch (MalformedURLException e) { throw new RuntimeException(e); }
     }
 

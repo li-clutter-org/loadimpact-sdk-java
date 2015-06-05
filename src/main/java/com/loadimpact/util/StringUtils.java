@@ -1,5 +1,9 @@
 package com.loadimpact.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -101,5 +105,24 @@ public class StringUtils {
         for (int k = 0; k < numSlots; ++k) bar.setCharAt(k, mark);
 
         return String.format("[%s] %3.0f%%", bar, percentage);
+    }
+
+    /**
+     * Consumes the given input-stream and return the content as a string.
+     * @param is    input-stream to read from
+     * @return content as string
+     */
+    public static String toString(InputStream is) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            StringBuilder buf = new StringBuilder(4096);
+            final String EOL = System.getProperty("line.separator", "\n");
+            for (String line; (line = reader.readLine()) != null; ) {
+                buf.append(line).append(EOL); 
+            }
+            return buf.toString();
+        } catch (IOException e) {
+            return e.toString();
+        }
     }
 }
