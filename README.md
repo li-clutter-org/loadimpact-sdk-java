@@ -1,4 +1,4 @@
-# Load Impact Java SDK [![Build Status](https://travis-ci.org/loadimpact/loadimpact-sdk-java.png?branch=master,develop)](https://travis-ci.org/loadimpact/loadimpact-sdk-java) [ ![Download](https://api.bintray.com/packages/ribomation/maven/loadimpact-sdk-java/images/download.svg) ](https://bintray.com/ribomation/maven/loadimpact-sdk-java/_latestVersion)
+# Load Impact Java SDK [![Build Status](https://travis-ci.org/loadimpact/loadimpact-sdk-java.png?branch=master,develop)](https://travis-ci.org/loadimpact/loadimpact-sdk-java) [ ![Download](https://api.bintray.com/packages/loadimpact/loadimpact-sdk-java/loadimpact-sdk-java/images/download.svg) ](https://bintray.com/loadimpact/loadimpact-sdk-java/loadimpact-sdk-java/_latestVersion)
 
 This Java SDK provides Java APIs to the Load Impact platform for running 
 and managing performance tests in the cloud.
@@ -137,17 +137,17 @@ Run the following command to remove the build directory and all generated files
 
 It's probably easiest to use Maven or Gradle to just add the dependency of the `withDepends` JAR file. If you just 
 want the SDK classes, change classifier to 'lib'. Configure where and what to fetch as dependency as shown below. 
-Remember to double-check the version number, so you go with the latest SDK version.
+*Remember to double-check the version number, so you go with the latest SDK version.*
 
 ### Gradle
 
     repositories {
         maven {
-            url  "http://dl.bintray.com/ribomation/maven" 
+            url  "http://dl.bintray.com/loadimpact/loadimpact-sdk-java" 
         }
     }
     dependencies {   
-        compile group: 'com.loadimpact', name: 'loadimpact-sdk-java', version: '1.4', classifier: 'withDepends'
+        compile group: 'com.loadimpact', name: 'loadimpact-sdk-java', version: '1.4.1', classifier: 'withDepends'
     }
 
 ### Maven
@@ -155,7 +155,7 @@ Remember to double-check the version number, so you go with the latest SDK versi
     <repositories>
         <repository>
             <id>bintray</id>
-            <url>http://dl.bintray.com/ribomation/maven/</url>
+            <url>http://dl.bintray.com/loadimpact/loadimpact-sdk-java/</url>
         </repository>
     </repositories>
 
@@ -163,7 +163,7 @@ Remember to double-check the version number, so you go with the latest SDK versi
         <dependency>
             <groupId>com.loadimpact</groupId>
             <artifactId>loadimpact-sdk-java</artifactId>
-            <version>1.4</version>
+            <version>1.4.1</version>
             <type>jar</type>
             <classifier>withDepends</classifier>
         </dependency>
@@ -239,12 +239,12 @@ version = '1.0'
 
 repositories {
     maven {
-        url  "http://dl.bintray.com/ribomation/maven" 
+        url  "http://dl.bintray.com/loadimpact/loadimpact-sdk-java" 
     }
 }
 
 dependencies {   
-    compile group: 'com.loadimpact', name: 'loadimpact-sdk-java', version: '1.4', classifier: 'withDepends'
+    compile group: 'com.loadimpact', name: 'loadimpact-sdk-java', version: '1.4.1', classifier: 'withDepends'
 }
 
 mainClassName = 'App'   //RUN: gradle run
@@ -271,7 +271,7 @@ If you plan on using Maven (instead of Gradle), add the following content to pom
     <repositories>
         <repository>
             <id>bintray</id>
-            <url>http://dl.bintray.com/ribomation/maven/</url>
+            <url>http://dl.bintray.com/loadimpact/loadimpact-sdk-java/</url>
         </repository>
     </repositories>
 
@@ -279,7 +279,7 @@ If you plan on using Maven (instead of Gradle), add the following content to pom
         <dependency>
             <groupId>com.loadimpact</groupId>
             <artifactId>loadimpact-sdk-java</artifactId>
-            <version>1.4</version>
+            <version>1.4.1</version>
             <type>jar</type>
             <classifier>withDepends</classifier>
         </dependency>
